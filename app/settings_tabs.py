@@ -482,6 +482,15 @@ class PasswordsTab:
         self.confirm = None
         self.b_remove.configure(text="Remove")
 
+    def dirty(self):
+        """A value typed in but not saved (Settings asks before leaving)."""
+        value = self.v_value.get()
+        return bool(value) and self.secrets.get(self.v_name.get().strip()) != value
+
+    def discard(self):
+        self.v_value.set("")
+        self.pick()
+
     def _write(self):
         try:
             secrets_store.save(self.secrets)
@@ -700,4 +709,370 @@ class CheatTab:
             self.host.status("Could not open the folder: %s" % ex, BAD)
 
 
-TAB_CLASSES = [SpeedTab, SwitchesTab, WindowTab, PasswordsTab, CheatTab]
+# ---- Start here (the first-run guide) ---------------------------------------------------------
+GUIDE_STEPS = ["Your switches", "Test them", "Pick a speed", "Try typing", "Try the mouse", "Done"]
+ARROW = {"up": "↑", "down": "↓", "left": "←", "right": "→",
+         "up-left": "↖", "up-right": "↗", "down-left": "↙", "down-right": "↘"}
+KEYPAD = [["up-left", "up", "up-right"], ["left", None, "right"],
+          ["down-left", "down", "down-right"]]
+MOUSE_TASKS = [("left", 3), ("right", 1)]        # (button, how many targets)
+TARGET = 70                                      # target size, pixels
+PRACTICE_GOAL = 3               # letters typed before "well done"
+PRACTICE_PAUSE_MS = 5000        # ... then this long without typing goes on
+
+
+class GuideTab:
+    """Five short steps for someone new: which switches, press each one, a
+    speed, type a few letters, the codes to remember. It opens by itself the
+    first time SwitchMorse starts (no map yet). Steps that wait for the
+    switches go on by themselves, so no other way to press Next is needed."""
+    title = "Start here"
+
+    def __init__(self, f, host):
+        self.host, self.app = host, host.app
+        self.step = 0
+        self.pressed = set()
+        self.head = _label(f, "", style="Big.TLabel")
+        self.head.pack(anchor="w", padx=16, pady=(14, 2))
+        self.l_steps = _label(f, "", style="Dim.TLabel")
+        self.l_steps.pack(anchor="w", padx=16)
+        self.body = ttk.Frame(f)
+        self.body.pack(fill="both", expand=True, padx=16, pady=10)
+        nav = ttk.Frame(f)
+        nav.pack(fill="x", padx=16, pady=(0, 10))
+        self.b_back = ttk.Button(nav, text="Back", command=lambda: self.go(self.step - 1))
+        self.b_next = ttk.Button(nav, text="Next", command=lambda: self.go(self.step + 1))
+        self.b_back.pack(side="left")
+        self.b_next.pack(side="left", padx=8)
+        ttk.Button(nav, text="Skip the guide", command=self.finish).pack(side="right")
+        f.after_idle(lambda: self.go(0))     # once the other tabs (Switches, Speed) exist
+
+    def go(self, step):
+        if step >= len(GUIDE_STEPS):
+            self.finish()
+            return
+        self.step = max(0, step)
+        self.host.status("", DIM)
+        for w in self.body.winfo_children():
+            w.destroy()
+        self.head.configure(text=GUIDE_STEPS[self.step])
+        self.l_steps.configure(text="Step %d of %d" % (self.step + 1, len(GUIDE_STEPS)))
+        self.b_next.configure(text="Finish" if self.step == len(GUIDE_STEPS) - 1 else "Next")
+        [self.s_switches, self.s_test, self.s_speed, self.s_practice, self.s_mouse,
+         self.s_done][self.step](self.body)
+        try:
+            if self.host.nb.tab(self.host.nb.select(), "text").strip() == self.title:
+                (getattr(self, "practice", None) if self.step == 3 else self.b_next).focus_set()
+        except tk.TclError:
+            pass
+
+    def finish(self):
+        self.go(0)
+        self.host.show_tab("Keyboard")
+        self.host.status("The guide is on the 'Start here' tab whenever you want it again.", DIM)
+
+    def text(self, parent, words, **kw):
+        return _label(parent, words, wraplength=860, justify="left", **kw)
+
+    def code_for(self, group, text):
+        """The code that does `text` in `group` of the user's map, or None."""
+        for e in mapload.entries(self.host.map_path):
+            if e["group"] == group and mapload._norm(e["text"]) == mapload._norm(text):
+                return e["code"]
+        return None
+
+    def code_line(self, parent, code, words):
+        row = ttk.Frame(parent)
+        row.pack(anchor="w", pady=3)
+        if code:
+            ttk.Label(row, image=self.host.code_image(code)).pack(side="left", padx=(0, 12))
+        _label(row, words).pack(side="left")
+
+    # -- the steps
+    def s_switches(self, b):
+        self.text(b, "SwitchMorse turns two switches into a whole keyboard and mouse: one switch "
+                     "sends a dot, the other a dash (on an AeroMorse: sip = dot, puff = dash), and "
+                     "each pattern of dots and dashes does one thing. What will you use?").pack(
+            anchor="w", pady=(0, 10))
+        sw = self.host.extra.get("Switches")
+        for key, label, help_ in INPUTS:
+            row = ttk.Frame(b)
+            row.pack(anchor="w", pady=2)
+            ttk.Radiobutton(row, text=label, value=key, variable=sw.v_input,
+                            command=sw.pick_input).pack(side="left")
+            _label(row, "  " + help_, style="Dim.TLabel").pack(side="left")
+        self.l_using = _label(b, "", style="Bold.TLabel")
+        self.l_using.pack(anchor="w", pady=(12, 0))
+        self.tick_using()
+
+    def tick_using(self):
+        try:
+            if self.step != 0 or not self.l_using.winfo_exists():
+                return
+        except tk.TclError:
+            return
+        a = self.app
+        if a and a.link_ok:
+            self.l_using.configure(text="Found: %s. %s" % (
+                a.reader.source or "?",
+                "Click Next." if a.actions.group == 2 else "Press either switch to go on."),
+                foreground=OK)
+        else:
+            self.l_using.configure(text=(a.link if a else "SwitchMorse isn't running here."),
+                                   foreground=WARN)
+        self.l_using.after(500, self.tick_using)
+
+    def s_test(self, b):
+        self.pressed = set()
+        self.text(b, "Press each switch once. Its box lights up and gets a tick. When both "
+                     "have a tick, the guide goes on by itself.").pack(anchor="w", pady=(0, 12))
+        row = ttk.Frame(b)
+        row.pack(anchor="w")
+        self.lights = {}
+        for sw in ("dot", "dash"):
+            lab = tk.Label(row, text=" DOT " if sw == "dot" else " DASH ", font=BIG, width=8,
+                           bg="#333", fg=DIM)
+            lab.pack(side="left", padx=(0, 16))
+            self.lights[sw] = lab
+        if not self.app:
+            self.text(b, "(The test needs SwitchMorse running.)", style="Dim.TLabel").pack(anchor="w")
+
+    def switch_event(self, sw, pressed):
+        """Steps 1 and 3 go on with a switch press, so someone new needs no Next
+        button - but not in the Mouse group, where a press is a click (on Back,
+        say). The last step waits for Finish, so it can be read."""
+        try:
+            if self.host.nb.tab(self.host.nb.select(), "text").strip() != self.title:
+                return
+        except tk.TclError:
+            return
+        if self.step in (0, 2):
+            if not pressed and not (self.app and self.app.actions.group == 2):
+                self.go(self.step + 1)
+            return
+        if self.step != 1:
+            return
+        lab = self.lights.get(sw)
+        if not lab:
+            return
+        if pressed:
+            self.pressed.add(sw)
+        lab.configure(text=("✓ " if sw in self.pressed else " ") + sw.upper() + " ",
+                      bg=OK if pressed else ("#2f5e34" if sw in self.pressed else "#333"),
+                      fg="black" if pressed else (FG if sw in self.pressed else DIM))
+        if not pressed and self.pressed == {"dot", "dash"}:
+            self.host.status("Both switches work.", OK)
+            lab.after(1200, lambda: self.step == 1 and self.go(2))
+
+    def s_speed(self, b):
+        self.text(b, "How long SwitchMorse waits after your last dot or dash before it takes "
+                     "the letter. New to Morse? Start with Learning - you can change it any "
+                     "time on the Speed tab. Or press a switch to keep the speed you have "
+                     "(Learning, when new) - except in the Mouse group, where a press clicks."
+                ).pack(anchor="w", pady=(0, 10))
+        sp = self.host.extra.get("Speed")
+        for name, vals in PRESETS:
+            row = ttk.Frame(b)
+            row.pack(anchor="w", pady=3)
+            ttk.Button(row, text=name, width=12,
+                       command=lambda n=name, v=vals: self.pick_speed(n, v, sp)).pack(side="left")
+            _label(row, "   waits %.2f s; hold %.1f s to change group"
+                   % (vals["ACCEPT_DELAY"], vals["LONG_PRESS"]), style="Dim.TLabel").pack(side="left")
+
+    def pick_speed(self, name, vals, sp):
+        if sp:
+            sp.preset(vals)
+        self.go(3)
+        self.host.status("Speed: %s." % name, OK)
+
+    def s_practice(self, b):
+        top = ttk.Frame(b)
+        top.pack(fill="x")
+        self.text(top, "Type a few letters - your name, or e (one dot) and t (one dash). What "
+                       "you send appears in the box.").pack(anchor="w")
+        self.l_group = ttk.Frame(top)               # words and a code picture
+        self.l_group.pack(anchor="w", pady=(4, 0))
+        v = tk.StringVar()
+        self.practice = tk.Entry(b, textvariable=v, width=30, font=("Consolas", 20), bg=BG2, fg=FG,
+                                 insertbackground=FG, relief="flat", highlightthickness=3,
+                                 highlightbackground="#555", highlightcolor=ACCENT)
+        self.practice.pack(anchor="w", pady=8)
+        v.trace_add("write", lambda *a: self.typed(v.get()))
+        grid = ttk.Frame(b)
+        grid.pack(anchor="w")
+        letters = sorted((e["text"].strip(), e["code"]) for e in mapload.entries(self.host.map_path)
+                         if e["group"] == 1 and re.fullmatch(r"[a-z]", e["text"].strip())
+                         and not isinstance(e["action"], str))
+        for i, (ch, code) in enumerate(letters):
+            cell = ttk.Frame(grid)
+            cell.grid(row=i % 7, column=i // 7, sticky="w", padx=(0, 22), pady=1)
+            _label(cell, ch, style="Bold.TLabel", width=2).pack(side="left")
+            ttk.Label(cell, image=self.host.code_image(code, small=True)).pack(side="left")
+        self.tick_group()
+
+    def typed(self, s):
+        """Enough letters, then a few quiet seconds: on to the last step."""
+        if getattr(self, "_next_job", None):
+            self.practice.after_cancel(self._next_job)
+            self._next_job = None
+        if len(s.strip()) >= PRACTICE_GOAL:
+            self.host.status("Well done - that's typing in Morse! Type more, or stop for a "
+                             "moment to go on.", OK)
+            self._next_job = self.practice.after(PRACTICE_PAUSE_MS,
+                                                 lambda: self.step == 3 and self.go(4))
+
+    def tick_group(self):
+        try:
+            if self.step != 3 or not self.l_group.winfo_exists():
+                return
+        except tk.TclError:
+            return
+        a = self.app
+        if a and a.actions.group != 1:
+            code = self.code_for(0, "group Keyboard")
+            self.host.rich(self.l_group, "You are in the %s group: first send %s to go to "
+                           "Keyboard." % ({2: "Mouse", 3: "Macros"}.get(a.actions.group, "Base"),
+                                          "\x00%s\x00" % code if code else "the Keyboard code"),
+                           WARN, BOLD)
+        else:
+            for w in self.l_group.winfo_children():
+                w.destroy()
+        self.l_group.after(500, self.tick_group)
+
+    def s_mouse(self, b):
+        """The move codes laid out like a number keypad (from the user's own
+        map), and targets to reach and click: left-click, then right-click."""
+        top = ttk.Frame(b)
+        top.pack(fill="x")
+        self.l_mgroup = ttk.Frame(top)                # go to Mouse / back to Keyboard
+        self.l_mgroup.pack(anchor="w")
+        row = ttk.Frame(b)
+        row.pack(fill="both", expand=True, pady=(8, 0))
+        left = ttk.Frame(row)
+        left.pack(side="left", anchor="n")
+        moves, codes = {}, {}
+        for e in mapload.entries(self.host.map_path):
+            if e["group"] != 2 or isinstance(e["action"], str):
+                continue
+            t = e["text"].strip().lower()
+            m = re.fullmatch(r"move (\S+)", t)
+            if m and m.group(1) in ARROW:
+                moves.setdefault(m.group(1), []).append(e["code"])
+            elif t in ("click left", "click right", "repeat") and t not in codes:
+                codes[t] = e["code"]
+        pad = ttk.Frame(left)
+        pad.pack(anchor="w")
+        for r, line in enumerate(KEYPAD):
+            for c, d in enumerate(line):
+                cell = tk.Frame(pad, bg=BG2, width=150, height=84, highlightthickness=1,
+                                highlightbackground="#555")
+                cell.grid(row=r, column=c, padx=3, pady=3)
+                cell.pack_propagate(False)
+                if d is None:
+                    tk.Label(cell, text="repeat", bg=BG2, fg=DIM, font=FONT).pack(pady=(10, 2))
+                    if "repeat" in codes:
+                        tk.Label(cell, image=self.host.code_image(codes["repeat"], small=True),
+                                 bg=BG2).pack()
+                    continue
+                tk.Label(cell, text=ARROW[d], bg=BG2, fg="#00e5ff", font=("Segoe UI Symbol", 20)
+                         ).pack()
+                for code in sorted(moves.get(d, []), key=len)[:2]:      # short step, big step
+                    tk.Label(cell, image=self.host.code_image(code, small=True), bg=BG2).pack()
+        for name, words in (("click left", "Left click"), ("click right", "Right click")):
+            line = ttk.Frame(left)
+            line.pack(anchor="w", pady=(6, 0))
+            _label(line, words, style="Bold.TLabel", width=11).pack(side="left")
+            if name in codes:
+                ttk.Label(line, image=self.host.code_image(codes[name])).pack(side="left")
+        _label(left, "Short code = a small step, long code = a big one.\n'repeat' keeps the "
+                     "last move going until\nyour next press.", style="Dim.TLabel").pack(
+            anchor="w", pady=(8, 0))
+
+        right = ttk.Frame(row)
+        right.pack(side="left", fill="both", expand=True, padx=(18, 0))
+        self.l_task = _label(right, "", style="Bold.TLabel", wraplength=480)
+        self.l_task.pack(anchor="w")
+        self.canvas = tk.Canvas(right, bg="#111", highlightthickness=1, highlightbackground="#555",
+                                width=480, height=380)
+        self.canvas.pack(fill="both", expand=True, pady=(6, 0))
+        self.tasks = [btn for btn, n in MOUSE_TASKS for _ in range(n)]
+        self.done_tasks = 0
+        self.canvas.after(50, self.new_target)
+        self.tick_mgroup()
+
+    def new_target(self, last=None):
+        """The next target, somewhere well away from the last one."""
+        import random
+        cv = self.canvas
+        try:
+            cv.delete("all")
+            w, h = max(cv.winfo_width(), 300), max(cv.winfo_height(), 250)
+        except tk.TclError:
+            return
+        if self.done_tasks >= len(self.tasks):
+            cv.create_text(w // 2, h // 2, text="Well done!", fill=OK, font=BIG)
+            self.l_task.configure(text="That's the mouse. Click Next.", foreground=OK)
+            return
+        btn = self.tasks[self.done_tasks]
+        for _ in range(50):
+            x = random.randint(10, w - TARGET - 10)
+            y = random.randint(10, h - TARGET - 10)
+            if not last or abs(x - last[0]) + abs(y - last[1]) > 180:
+                break
+        if btn == "left":
+            item = cv.create_oval(x, y, x + TARGET, y + TARGET, fill="#3ddc84", outline="")
+            word = "Left-click the green circle"
+        else:
+            item = cv.create_rectangle(x, y, x + TARGET, y + TARGET, fill="#ffb84d", outline="")
+            word = "Right-click the orange square"
+        self.l_task.configure(text="%s  (%d of %d)" % (word, self.done_tasks + 1, len(self.tasks)),
+                              foreground=FG)
+        hit = lambda e, b=btn: self.target_hit(b, (x, y))
+        cv.tag_bind(item, "<Button-1>" if btn == "left" else "<Button-3>", hit)
+        miss = "<Button-3>" if btn == "left" else "<Button-1>"
+        cv.tag_bind(item, miss, lambda e: self.host.status(
+            "That was a %s click - this one wants a %s click." % (
+                "right" if btn == "left" else "left", btn), WARN))
+
+    def target_hit(self, btn, where):
+        self.done_tasks += 1
+        self.host.status("Got it!", OK)
+        self.new_target(where)
+
+    def tick_mgroup(self):
+        try:
+            if self.step != 4 or not self.l_mgroup.winfo_exists():
+                return
+        except tk.TclError:
+            return
+        a = self.app
+        for w in self.l_mgroup.winfo_children():
+            w.destroy()
+        finished = self.done_tasks >= len(self.tasks)
+        if a and not finished and a.actions.group != 2:
+            code = self.code_for(0, "group Mouse")
+            self.host.rich(self.l_mgroup, "First send %s to go to the Mouse group." % (
+                "\x00%s\x00" % code if code else "the Mouse code"), WARN, BOLD)
+        elif a and finished and a.actions.group != 1:
+            code = self.code_for(0, "group Keyboard")
+            self.host.rich(self.l_mgroup, "Send %s to go back to the Keyboard group." % (
+                "\x00%s\x00" % code if code else "the Keyboard code"), OK, BOLD)
+        self.l_mgroup.after(500, self.tick_mgroup)
+
+    def s_done(self, b):
+        self.text(b, "You're ready. These work in every group - worth remembering:").pack(
+            anchor="w", pady=(0, 8))
+        for text, words in (("group Keyboard", "Keyboard: letters, numbers, keys"),
+                            ("group Mouse", "Mouse: move, click, scroll"),
+                            ("group Macros", "Macros: phrases and passwords"),
+                            ("settings", "this Settings window"),
+                            ("show window", "bring the SwitchMorse window to the front")):
+            self.code_line(b, self.code_for(0, text), words)
+        self.text(b, "Holding a switch for the long-press time and letting go also moves to the "
+                     "next group. The Cheat sheet tab prints every code; the Keyboard, Mouse "
+                     "and Macros tabs let you change them. Press Finish to start.",
+                  style="Dim.TLabel").pack(
+            anchor="w", pady=(10, 0))
+
+
+TAB_CLASSES = [GuideTab, SpeedTab, SwitchesTab, WindowTab, PasswordsTab, CheatTab]

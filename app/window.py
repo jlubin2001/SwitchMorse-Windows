@@ -143,6 +143,7 @@ class Window:
                           variable=self.v_hints, command=self.remember)
         m.add_separator()
         if on_settings:
+            m.add_command(label="Start here (guide)...", command=lambda: on_settings("Start here"))
             m.add_command(label="Settings...", command=on_settings)
         if on_reload:
             m.add_command(label="Reload map", command=on_reload)

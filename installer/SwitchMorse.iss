@@ -50,5 +50,8 @@ Name: "{autodesktop}\SwitchMorse"; Filename: "{app}\SwitchMorse.exe"; Tasks: des
 [Dirs]
 Name: "{userdocs}\SwitchMorse"; Flags: uninsneveruninstall
 
+[Messages]
+FinishedLabel=SwitchMorse is installed.%n%nThe first time it starts it opens a short guide: test your switches, pick a speed, then try typing and the mouse. To see the guide again, right-click the SwitchMorse window and choose "Start here (guide)...".%n%nYour codes and settings will be in Documents\SwitchMorse.
+
 [Run]
 Filename: "{app}\SwitchMorse.exe"; Description: "Start SwitchMorse now"; Flags: nowait postinstall skipifsilent

@@ -181,6 +181,7 @@ class SettingsWindow:
         self.editing = None                 # code being changed, or None = adding
         self.confirm = None                 # what a second press of Save / Delete would do
         self.recording = False
+        self.leave_to = None                # tab (or "close") chosen once with something unsaved
         if root is None:
             appicon.set_app_id()
             root = tk.Tk()
@@ -200,7 +201,7 @@ class SettingsWindow:
         self.sort_by = "code"
         for g, title in TABS:
             f = ttk.Frame(self.nb)
-            self.nb.add(f, text="  %s  " % title)
+            self.nb.add(f, text=" %s " % title)
             t = ttk.Treeview(f, columns=("does", "note"), show="tree headings",
                              selectmode="browse", height=5)
             t.heading("#0", text="Code")            # the code, drawn as dots and dashes
@@ -315,7 +316,7 @@ class SettingsWindow:
         self.extra = {}
         for cls in settings_tabs.TAB_CLASSES:
             f = ttk.Frame(self.nb)
-            self.nb.add(f, text="  %s  " % cls.title)
+            self.nb.add(f, text=" %s " % cls.title)
             self.extra[cls.title] = cls(f, self)
 
         self.load()
@@ -335,9 +336,10 @@ class SettingsWindow:
 
     def switch_event(self, sw, pressed):
         """From SwitchMorse: a switch went down or up (for the Switches tab's test)."""
-        tab = self.extra.get("Switches")
-        if tab:
-            tab.switch_event(sw, pressed)
+        for name in ("Switches", "Start here"):
+            tab = self.extra.get(name)
+            if tab:
+                tab.switch_event(sw, pressed)
 
     # ---- look -------------------------------------------------------------------
     def _style(self):
@@ -355,6 +357,7 @@ class SettingsWindow:
         s.configure("Status.TLabel", foreground=DIM)
         s.configure("Dim.TLabel", foreground=DIM)
         s.configure("Bold.TLabel", font=BOLD)
+        s.configure("Big.TLabel", font=("Segoe UI", 20, "bold"))
         s.configure("Value.TLabel", font=("Consolas", 16, "bold"), foreground="#00e5ff")
         s.configure("TRadiobutton", background=BG, foreground=FG, font=BOLD, padding=(4, 6),
                     indicatorsize=18)
@@ -364,7 +367,7 @@ class SettingsWindow:
         s.configure("TLabelframe", background=BG, bordercolor="#555")
         s.configure("TLabelframe.Label", background=BG, foreground=FG, font=BOLD)
         s.configure("TNotebook", background=BG, borderwidth=0)
-        s.configure("TNotebook.Tab", background=BG2, foreground=DIM, padding=(12, 8), font=BOLD)
+        s.configure("TNotebook.Tab", background=BG2, foreground=DIM, padding=(10, 8), font=BOLD)
         s.map("TNotebook.Tab", background=[("selected", ACCENT)], foreground=[("selected", "white")])
         s.configure("Treeview", background=BG2, foreground=FG, fieldbackground=BG2, rowheight=36,
                     font=("Segoe UI", 14))
@@ -627,6 +630,29 @@ class SettingsWindow:
         return self.active.get((int(g), code))
 
     def tab_changed(self, ev=None):
+        new = self.nb.index(self.nb.select())
+        was = getattr(self, "cur_tab", new)
+        if getattr(self, "_going_back", False) or (ev is not None and new == was
+                                                   and hasattr(self, "cur_tab")):
+            return                                  # (sent back to the tab it was on)
+        if was != new and hasattr(self, "extra"):
+            what = self.unsaved(was)
+            if what and self.leave_to != new:       # stay, and say so (no pop-up)
+                self.leave_to = new
+                self._going_back = True
+                self.nb.select(was)
+                self.root.update_idletasks()
+                self._going_back = False
+                self.status("You have %s here. Save it - or choose the %s tab again to leave "
+                            "without saving." % (what, self.nb.tab(new, "text").strip()), WARN)
+                return
+            if what:                                # chosen twice: leave it
+                pw = self.extra.get("Passwords")
+                if pw and self.nb.tab(was, "text").strip() == "Passwords":
+                    pw.discard()
+                self.status("Left without saving.", DIM)
+        self.leave_to = None
+        self.cur_tab = new
         if self.group is None:              # not a code tab: no code buttons, editor, undo
             self.stop_recording()
             pw = self.extra.get("Passwords") if hasattr(self, "extra") else None
@@ -691,6 +717,22 @@ class SettingsWindow:
         self._quiet = False
         self.show_detail()
         self.update_preview()
+        self.clean = self.editor_state()          # what "unsaved" is measured from
+
+    def editor_state(self):
+        return (self.v_code.get(), self.v_kind.get(), self.v_value.get(), self.v_tap.get(),
+                tuple(v.get() for v in self.v_mods.values()), self.v_raw.get(), self.v_note.get())
+
+    def unsaved(self, i):
+        """What is unsaved on tab number i, in words, or None."""
+        if i < len(TABS):
+            if getattr(self, "clean", None) is not None and self.editor_state() != self.clean:
+                return "a code you haven't saved"
+            return None
+        pw = self.extra.get("Passwords")
+        if pw and self.nb.tab(i, "text").strip() == "Passwords" and pw.dirty():
+            return "a password you haven't saved"
+        return None
 
     def kind_changed(self):
         if getattr(self, "_quiet", False):
@@ -925,6 +967,12 @@ class SettingsWindow:
                 self.on_record(None)
 
     def close(self):
+        what = self.unsaved(self.nb.index(self.nb.select()))
+        if what and self.leave_to != "close":
+            self.leave_to = "close"
+            self.status("You have %s here. Save it - or press Close again to close without "
+                        "saving." % what, WARN)
+            return
         self.stop_recording()
         if self.on_close:
             self.on_close()

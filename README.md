@@ -39,6 +39,12 @@ One of these, to send the dots and dashes:
 It adds Start menu entries for SwitchMorse, the cheat sheet and your files.
 Or unzip **SwitchMorse-<version>.zip** anywhere and run `SwitchMorse.exe`.
 
+**The first time it starts, SwitchMorse opens a short guide** (Settings →
+*Start here*). It walks you through picking and testing your switches, choosing
+a speed, typing a few letters, and moving and clicking the mouse. You can do it
+all with the switches alone. To see it again, right-click the SwitchMorse window
+→ **Start here (guide)...**
+
 Your map and settings are kept in **Documents\SwitchMorse**, made at the first
 start. Updating or uninstalling the program never touches them.
 
@@ -123,6 +129,7 @@ code (`...-.-.` in Base). Its tabs:
 | Tab | What's on it |
 |---|---|
 | Keyboard, Mouse, Macros, Base | the codes of each group (below) |
+| Start here | the first-run guide: pick your switches, test them, choose a speed, type a few letters, move the pointer to targets and left- and right-click them (with the move codes laid out like a number keypad), the codes to remember. It opens by itself the first time SwitchMorse starts. A switch press moves it on, so no mouse is needed |
 | Speed | Learning / Comfortable / Fast, each timing with − / + buttons, a practice box, how typing behaves |
 | Switches | which switches; DOT and DASH light up as you press them; the two keyboard keys; the port |
 | Window | always on top, title bar, hints, see-through, sound; put the window back where it can be seen |

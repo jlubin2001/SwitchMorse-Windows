@@ -24,7 +24,7 @@ from decoder import Decoder      # noqa: E402
 from switches import SwitchReader  # noqa: E402
 from window import Window        # noqa: E402
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 UI_STALE = 0.5      # seconds without a turn of the main loop = not responding
 
 try:    # real screen coordinates on scaled (125 %, 150 %) screens, for Centre pointer
@@ -38,6 +38,7 @@ class App:
     def __init__(self):
         self.events = queue.Queue()             # from the serial thread
         self.input_problems = []                # notes about DOT_KEY / DASH_KEY
+        self.first_run = not os.path.exists(mapload.default_path())    # load() makes it
         codes, problems = mapload.load()
         self.map_problems = problems
         self.note_problems(problems)
@@ -180,6 +181,8 @@ class App:
         self.reader.start()
         self.refresh()
         self.win.root.after(10, self.poll)
+        if self.first_run:                      # new here: the guide (Settings > Start here)
+            self.win.root.after(1500, lambda: self.open_settings("Start here"))
         self.win.root.mainloop()
 
     def open_settings(self, tab=None):
