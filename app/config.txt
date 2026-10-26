@@ -1,0 +1,80 @@
+# SwitchMorse Windows - config.txt - settings
+# One setting per line:   NAME = value      # a note (optional)
+#   yes / no  (also true / false, on / off)    numbers like 0.2 or 15
+#   words like auto      lists separated by commas: Page Up, Page Down
+# A line with a mistake is left out (the window says so) and that setting keeps
+# its default. A change takes effect by itself within a second - no restart.
+#
+# This copy, in the program's app folder, holds every setting with its default.
+# Your own copy is config.txt in your work folder (tools\make_work_folder.py):
+# whatever you set there wins; anything you leave out uses the default here.
+# Names match AeroMorse's config.py where they mean the same thing.
+
+# -- Timing (seconds) -----------------------------------------------------------
+ACCEPT_DELAY = 0.5          # pause after the last press before the code is sent.
+                            # 0.5 is for LEARNING: time to think between the dots and
+                            # dashes of one letter. As you get faster, lower it step
+                            # by step (0.4, 0.3, 0.25); a practised user may type at
+                            # 0.2. Keep it above your gaps INSIDE a code: if codes get
+                            # cut in two, raise it a little; if you wait too long
+                            # between characters, lower it.
+MOUSE_ACCEPT_DELAY = 0.4    # the same, but ONLY in Group 2 (Mouse) - a little quicker so
+                            # clicks fire sooner; keep it above the gaps inside a code.
+SWITCH_BOUNCE_MS = 15       # a switch that lets go for less than this and closes
+                            # again is ONE sip / puff. A sip-and-puff switch can open
+                            # for 2-10 ms in the middle of a puff, but two real puffs
+                            # can be only 17-28 ms apart - 40 would join those.
+LONG_PRESS = 1.5            # hold a switch this long, then let go = next group.
+                            # 1.5 so a slow, unsure press doesn't change group by
+                            # surprise; experienced users often use 1.0.
+LONG_PRESS_CYCLES_GROUP = yes
+MACRO_RETURN = yes          # after a phrase or password from Macros, go back to
+                            # Keyboard by itself (as AeroMorse does)
+PRESS_LOG = no              # yes = write every sip / puff and code, with timings, to
+                            # press_log.txt in the work folder (fresh each start) - for
+                            # tuning. It records every letter typed, passwords typed
+                            # letter by letter included - switch it off afterwards.
+
+# -- Keys -------------------------------------------------------------------------
+# Keys and combinations that "repeat" never repeats (an accidental repeat would
+# scroll far past where you were). Key names as in morse_map.txt; + = together.
+NO_REPEAT_KEYS = Page Up, Page Down, Home, End, Esc, Tab, Win+Tab, Alt+Tab, RCtrl+RAlt+Left
+SHIFT_SELECT = yes          # Shift, then arrows / Home / End keep Shift on, so the
+                            # highlight grows; any other key lets Shift go.
+
+# -- Mouse (Group 2) - same names and defaults as AeroMorse -------------------------
+MOUSE_SPEED_NORMAL = 2      # one move = speed x MOUSE_SPEED_FACTOR pixels
+MOUSE_SPEED_SLOW = 1        # toggled with mouse slow (--..)
+MOUSE_SPEED_FAST = 3        # toggled with mouse fast (..-.)
+MOUSE_SPEED_FACTOR = 7      # overall scale (Windows' pointer speed applies on top);
+                            # 7 = the AeroMorse default, for Windows' default pointer
+                            # speed (2 is very slow)
+MOUSE_SCROLL_FACTOR = 2     # wheel notches per scroll code, times the speed
+MOUSE_REPEAT_DELAY = 0.040  # seconds per repeat step (keys and mouse glide)
+MOUSE_CLICK_HOLD = 0.060    # seconds a click holds the button down
+MOUSE_CLICK_GAP = 0.040     # seconds between the two clicks of a double-click
+MOUSE_CLICK_MOD_DELAY = 0.030   # settle time for Ctrl / Shift around a click
+MOUSE_CLICK_KEEPS_MODS = yes    # armed Ctrl stays on after a click (Ctrl+click
+                                # several items); send Ctrl again to let it go
+RIGHT_CLICK_MOVE_RIGHT = 2  # after a right-click, move the pointer right this many
+                            # "move right" steps, into the menu that opens. 0 = off.
+
+# -- Groups -----------------------------------------------------------------------
+START_GROUP = 1             # 1 = Keyboard, 2 = Mouse, 3 = Macros
+
+# -- Window -----------------------------------------------------------------------
+ALWAYS_ON_TOP = yes         # the start-up choice; the window's menu then remembers yours
+
+# -- Switches ---------------------------------------------------------------------
+INPUT = auto                # which switches: auto (a Trinkey if one is plugged in,
+                            # otherwise an AeroMorse with PC_HANDOVER = True),
+                            # trinkey, aeromorse, or keys (the two keyboard keys below)
+PORT = none                 # none = find it by itself; or a port, e.g. COM19
+
+# -- Keyboard keys as switches (only with INPUT = keys) ---------------------------
+# Many switch interfaces plug in as a USB keyboard and send Enter and Space.
+# While SwitchMorse runs with INPUT = keys these two keys are the switches and
+# don't type themselves (Morse codes for Enter and Space still work). Key names
+# as in morse_map.txt, e.g. Enter, Space, F9, Scroll Lock, Keypad 1.
+DOT_KEY = Enter             # held = dot switch held (as a sip in AeroMorse's Switch group)
+DASH_KEY = Space            # held = dash switch held (as a puff)

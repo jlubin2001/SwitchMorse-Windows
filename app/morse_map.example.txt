@@ -1,0 +1,296 @@
+# SwitchMorse Windows - morse_map.txt  (made from morse_map.example.txt)
+# The codes, one per line. Edit this file in Notepad; when you save it, the
+# program uses the new codes within a second (no restart).
+#
+# A line is:   CODE   WHAT IT DOES        # a note (optional)
+#   CODE is the dots and dashes you send: . is the dot switch, - the dash switch.
+#   Lines starting with # are notes. Blank lines are fine.
+#   [Keyboard], [Mouse], [Macros] start a group. Codes in [Base] work in every
+#   group (and win over the same code in a group).
+#
+# WHAT IT DOES can be:
+#   a character        a   ?   £   A        (any character, on any keyboard layout)
+#                      write #  '  "  in quotes:  "#"   '"'   "'"
+#                      and  .  -  too, so they don't look like part of a code:
+#                      "."   "-"
+#   a phrase           "Kind regards"
+#   a password etc.    secret email_pw     (the value is set in the SwitchMorse
+#                      Passwords window - right-click the SwitchMorse window)
+#   a key             Enter  Esc  Tab  Space  Backspace  Delete  Insert
+#                      Home  End  Page Up  Page Down  Up  Down  Left  Right
+#                      F1 ... F24  Caps Lock  Num Lock  Scroll Lock  Print Screen
+#                      Menu  Pause Key  Keypad Enter  Keypad .  Keypad /
+#   keys together      Ctrl+C   Ctrl+Alt+Delete   Win+Tab   Ctrl+=   Ctrl++
+#   a sticky modifier  Ctrl  Shift  Alt  Win  RCtrl  RShift  RAlt  RWin
+#                      (arms it; the next key goes with it. Send again to cancel.)
+#   a modifier alone   tap Ctrl
+#   media / apps       Mute  Volume Up  Volume Down  Play Pause  Next Track
+#                      Previous Track  Stop Media  Calculator  File Explorer
+#                      Web Browser  Mail
+#   a group            group Keyboard   group Mouse   group Macros
+#   commands           repeat   pause   release all   show window   settings
+#   mouse              move up / down / left / right / up-left / up-right /
+#                      down-left / down-right    scroll up   scroll down
+#                      click left / right / middle    double click left / right
+#                      drag left   mouse slow   mouse fast   centre pointer
+#
+# If a line has a mistake, the program leaves out just that line, says which
+# line it is, and loads everything else.
+
+
+[Base]
+# Base - these codes work in every group
+........  group Keyboard
+....----  group Macros
+--------  group Mouse
+.-.-.-    show window           # bring this window to the front (as AeroMorse's
+                                # .-.-.- shows its Display window)
+-.-.-.-.  pause                 # stop all output / start again (same code)
+.-.-.-.-  release all           # let go of every key and button
+...-.-.   settings              # the Settings window: change the codes
+
+[Keyboard]
+# Same codes as AeroMorse Group 1. Two letters differ from standard Morse, to
+# keep the short codes for keys used all the time:
+#   --   is Backspace  (M moved to ----)      -.-.  is Ctrl  (C moved to ---.)
+...-.     group Mouse
+
+# -- Letters
+.-        a
+-...      b
+---.      c                     # (non-standard; -.-. freed for LEFT_CONTROL)
+-..       d
+.         e
+..-.      f
+--.       g
+....      h
+..        i
+.---      j
+-.-       k
+.-..      l
+----      m                     # (non-standard; -- freed for BACKSPACE)
+-.        n
+---       o
+.--.      p
+--.-      q
+.-.       r
+...       s
+-         t
+..-       u
+...-      v
+.--       w
+-..-      x
+-.--      y
+--..      z
+
+# -- Numbers
+.----     1
+..---     2
+...--     3
+....-     4
+.....     5
+-....     6
+--...     7
+---..     8
+----.     9
+-----     0
+
+# -- Punctuation
+-...-     +
+.---.     "-"                   # hyphen / minus
+---.-     =
+-..--     *
+.-....    !
+---..-    @
+..---.    '#'
+..----    $
+..--.-    £                     # (new in SwitchMorse Windows; types on any layout)
+...-.-    %
+-...--    ^
+.---..    &
+.-----    "."                   # full stop
+-.....    ,
+.----.    :
+-....-    ;
+...---    )
+---...    (
+-..---    ]
+.--...    [
+--..-     }
+..--.     {
+--..--    <
+..--..    >
+-.----    ?
+....--    /                     # (forward slash)
+----..    \                     # (backslash)
+....-.    |
+----.-    _
+...--.    '"'                   # (double quote)
+..-...    "'"                   # (single quote)
+--.---    `
+---.--    ~
+
+# -- Function Keys
+--.----   F1                    # (--1)
+--..---   F2                    # (--2)
+--...--   F3                    # (--3)
+--....-   F4                    # (--4)
+--.....   F5                    # (--5)
+---....   F6                    # (--6)
+----...   F7                    # (--7)
+-----..   F8                    # (--8)
+------.   F9                    # (--9)
+-------   F10                   # (--0)
+.------   F11                   # (1--)
+..-----   F12                   # (2--)
+
+# -- Non-printable keyboard keys
+.-..-     Up                    # (au)
+.--..     Down                  # (ad)
+.-.-..    Left                  # (al)
+.-.-.     Right                 # (ar)
+.......   Home                  # (sh) (7 dots)
+...-...   End                   # (sb)
+.....-    Page Up               # (su)
+...-..    Page Down             # (sd)
+.-.-      Enter
+--....    Esc                   # (gs)
+-.--..    Delete                # (kd)
+-.-..     Insert                # (ki)
+--        Backspace             # (freed from M)
+..--      Space
+---..-.   Tab                   # (of)
+---.-.    Shift+Tab             # Shift+Tab, reverse tab  (or)
+..-..     repeat                # repeat
+
+# -- Modifier keys
+-.-.      Ctrl                  # (freed from C)
+--...-    Shift
+--.--     Alt
+.--.--    Win
+-----.    Caps Lock
+--.-..    Scroll Lock
+---...-   Num Lock
+--.--.    Print Screen
+
+[Mouse]
+# Same codes as AeroMorse Group 2. Moves follow the number keypad:
+#
+#   7  8  9      7 up-left  --...     8 up    --  (big: ---..)   9 up-right   ----.
+#   4  5  6      4 left     ..  (big: ....-)  5 repeat  .         6 right ...  (big: -....)
+#   1  2  3      1 down-left .----    2 down  --- (big: ..---)   3 down-right ...--
+#
+# "repeat" keeps the last move gliding until the next press (which only stops it).
+...-.     group Keyboard
+
+# -- Mouse movement - cardinal, small (2-3 symbols)
+--        move up               # numpad 8  up
+---       move down             # numpad 2  down
+...       move right            # numpad 6  right
+..        move left             # numpad 4  left
+
+# -- Mouse movement - scroll (6 symbols)
+.....-    scroll up             # scroll up
+...-..    scroll down           # scroll down
+
+# -- Mouse movement - diagonal (5 symbols)
+--...     move up-left          # numpad 7  up-left
+----.     move up-right         # numpad 9  up-right
+.----     move down-left        # numpad 1  down-left
+...--     move down-right       # numpad 3  down-right
+
+# -- Mouse movement - cardinal, large (5 symbols)
+---..     move up               # numpad 8  up     large
+..---     move down             # numpad 2  down   large
+....-     move left             # numpad 4  left   large
+-....     move right            # numpad 6  right  large
+
+# -- Mouse buttons and movement control
+.         repeat                # numpad 5  repeat last action
+..-..     repeat                # alternate repeat
+--..      mouse slow            # toggle slow-step mode
+..-.      mouse fast            # toggle fast mode
+.-        click left            # left click
+.--       click right           # right click
+..-       double click left     # double-click left
+..--      double click right    # double-click right
+-.        drag left             # toggle left-button drag
+
+# -- Page scroll - a TRUE page
+-..       Page Down             # page down
+-.-       Page Up               # page up
+.......   Home                  # Home (same code as in the Keyboard group)
+
+# -- Keypad & Arrow Keys
+-...-     Ctrl+Equals           # zoom in  (Ctrl and +)
+.---.     Ctrl+Minus            # zoom out (Ctrl and -)
+.-----    Keypad Period
+....--    Keypad Forward Slash
+----..    Menu                  # context-menu key
+---...-   Num Lock
+.-.-      Keypad Enter
+.-..-     Up                    # (au)
+.--..     Down                  # (ad)
+.-.-..    Left                  # (al)
+.-.-.     Right                 # (ar)
+
+# -- Windows shortcuts
+--..--    RCtrl+RAlt+Left       # free mouse from VM
+.....     Win+Tab               # task view (Win+Tab)
+-----     Alt+Tab               # switch windows (Alt+Tab)
+---..-.   Tab                   # (of)
+--....    Esc                   # (gs)
+--.....   F5                    # (--5)
+-.--..    Delete                # (kd)
+
+# -- Pointer helpers
+---.-     tap Ctrl              # find pointer: with "Show location of pointer when I
+                                # press the CTRL key" on (Mouse settings > Pointer
+                                # options), Windows draws circles round the pointer
+-..--     centre pointer        # centre pointer on its screen
+
+# -- Modifier keys
+-.-.      RCtrl
+--...-    RShift
+--.--     RAlt
+.--.--    RWin
+-.-.-.    Calculator            # calculator
+
+[Macros]
+# Phrases and passwords, on the same codes as the Keyboard letters.
+# A phrase in quotes is typed as it is. "secret NAME" types the private text
+# saved under NAME in the Passwords window (right-click the SwitchMorse window >
+# Passwords...) - it is never kept in this file. Change these to your own.
+# After one is typed you are back in Keyboard.
+...-.     group Keyboard
+
+# -- Your details (set them in the Passwords window)
+.-        secret name           # A
+-...      secret address        # B
+---.      secret phone          # C
+.         secret email          # E
+..-.      secret email_pw       # F
+
+# -- Phrases (change the text in quotes)
+-..       "Kind regards"        # D
+....      "Hello, "             # H
+-.        "No"                  # N
+---       "OK"                  # O
+-         "Thank you"           # T
+-.--      "Yes"                 # Y
+
+# -- Numbers (same codes as Keyboard)
+.----     1
+..---     2
+...--     3
+....-     4
+.....     5
+-....     6
+--...     7
+---..     8
+----.     9
+-----     0
+
+# -- Editing keys
+.-.-      Enter
+--        Backspace

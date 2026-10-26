@@ -1,0 +1,29 @@
+# Files git should not keep
+
+# made by Python when it runs
+__pycache__/
+*.pyc
+
+# made by the program while it runs (fresh each time)
+app/press_log.txt
+app/morse_map_problems.txt
+
+# copies of earlier versions - git keeps the history now
+Backups/
+
+# programs built from this folder (PyInstaller)
+build/
+dist/
+*.spec
+
+# your own files live in your work folder (tools/make_work_folder.py)
+app/workfolder.txt
+app/morse_map.txt
+/SwitchMorse Cheat Sheet.html
+/SwitchMorse Cheat Sheet.pdf
+/build/
+/dist/
+
+# kept private to each user
+app/morse_map.txt
+app/workfolder.txt

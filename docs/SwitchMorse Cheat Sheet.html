@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SwitchMorse Cheat Sheet</title>
+<style>
+  /* The look of the AeroMorse cheat sheet (aeromorse_cheatsheet.htm). */
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+         margin: 20px; background: #e9ecef; color: #333; }
+  h2 { text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin: 0 0 20px; color: #2c3e50; }
+  dot  { width: 15px; height: 15px; display: inline-block; background-color: #7806ec;
+         border-radius: 50%; vertical-align: middle; }
+  dash { width: 16px; height: 9px; display: inline-block; background-color: #009832;
+         border-radius: 2px; vertical-align: middle; }
+  cmd { border-radius: 10px; display: inline-block; font-size: 1.0em; font-weight: bold;
+        padding: 0.15em 0.65em; white-space: nowrap; border: 1px solid transparent; }
+  cmd.grp { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+  cmd.mse { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+  cmd.med { background: #cce5ff; color: #004085; border-color: #b8daff; }
+  cmd.mod { background: #fff3cd; color: #856404; border-color: #ffc107; }
+  cmd.sys { background: #e2e3e5; color: #383d41; border-color: #d6d8db; }
+  cmd.sec { background: #d6d8db; color: #1b1e21; border-color: #b9bcc0; }
+  keybd { border: 1px solid #ccc; border-radius: 3px;
+          box-shadow: 0 1px 0 rgba(0,0,0,0.2), 0 0 0 2px #fff inset; color: #000; display: inline-block;
+          font-family: Consolas, "Lucida Console", "Courier New", monospace; line-height: 1.4em;
+          padding: 0.1em 0.6em; text-shadow: 0 1px 0 #fff; white-space: nowrap; font-size: 1.2em;
+          font-weight: bold; background: #f8f9fa; }
+  .head { background: white; padding: 16px 20px; margin: 0 auto 20px; max-width: 1000px; border-radius: 8px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; }
+  .head h1 { margin: 0 0 6px; font-size: 1.5em; color: #2c3e50; }
+  .head p { margin: 4px 0; color: #555; }
+  button.print-btn { background: #007bff; color: white; border: none; padding: 10px 22px; font-size: 16px;
+                     border-radius: 4px; cursor: pointer; margin-top: 8px; }
+  .legend { margin: 0 auto 15px; max-width: 1000px; display: flex; flex-wrap: wrap; gap: 12px;
+            justify-content: center; background: white; padding: 12px 20px; border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.9em; }
+  .page { background: white; padding: 40px; margin: 0 auto 30px; max-width: 1000px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 8px; }
+  .columns { column-gap: 40px; column-rule: 1px solid #eee; }
+  .cols-3 { column-count: 3; }
+  .cols-2 { column-count: 2; }
+  .columns.dense .item { margin-bottom: 3px; padding-bottom: 2px; }
+  .item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+          break-inside: avoid; border-bottom: 1px dashed #f0f0f0; padding: 0 2px 6px; cursor: pointer;
+          border-radius: 4px; }
+  .item:hover { background: #f0f4ff; }
+  .morse-seq { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+  .key-output { flex-grow: 1; text-align: right; display: flex; justify-content: flex-end;
+                align-items: center; margin-left: 10px; }
+  .legend-print { display: none; }
+  .tip { text-align: center; font-size: 0.85em; color: #444; margin: 10px 0 0; }
+  @media print {
+    body { background: white; margin: 0; -webkit-print-color-adjust: exact !important;
+           print-color-adjust: exact !important; }
+    .head, .legend { display: none !important; }
+    .page { box-shadow: none; margin: 0; padding: 10px 0; max-width: 100%; page-break-after: always;
+            border-radius: 0; }
+    .columns { column-gap: 20px; }
+    .item { page-break-inside: avoid; cursor: default; }
+    .legend-print { display: block; margin-top: 22px; padding-top: 12px; border-top: 2px solid #ccc;
+                    page-break-inside: avoid; }
+    .legend-print h3 { text-align: center; margin: 0 0 10px; color: #2c3e50; font-size: 1em; }
+    .legend-print-strip { display: flex; flex-wrap: wrap; gap: 10px 18px; justify-content: center; }
+    .legend-print-strip .legend-item { font-size: 0.8em; }
+  }
+</style>
+</head>
+<body>
+  <div class="head">
+    <h1>SwitchMorse Cheat Sheet</h1>
+    <p>190 codes from your morse_map.txt, made 2026-10-25. Click a row to hear its Morse tones.</p>
+    <button class="print-btn" onclick="window.print()">&#x1F5A8;&#xFE0E; Print (one group per sheet)</button>
+  </div>
+  <div class="legend">
+    <span class="legend-item"><dot></dot> dot (sip / dot switch) &nbsp; <dash></dash> dash (puff / dash switch)</span>
+    <span class="legend-item"><keybd>Key</keybd> key or text it types</span>
+    <span class="legend-item"><cmd class="grp">→ Group</cmd> change group</span>
+    <span class="legend-item"><cmd class="mse">🖱︎ Mouse</cmd> mouse</span>
+    <span class="legend-item"><cmd class="mod">Mod</cmd> Ctrl / Shift / Alt / Win</span>
+    <span class="legend-item"><cmd class="sec">🔒 Secret</cmd> password (name only)</span>
+    <span class="legend-item"><cmd class="med">Media</cmd> media / app key</span>
+    <span class="legend-item"><cmd class="sys">System</cmd> repeat, pause...</span>
+  </div>
+  <div class="page"><h2>Base: works in every group</h2><div class="columns cols-2"><div class="item" data-morse="-.-.-.-." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dash></dash><dot></dot><dash></dash><dot></dot><dash></dash><dot></dot></div><div class="key-output"><cmd class="sys">Pause</cmd></div></div>
+<div class="item" data-morse=".-.-.-.-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dot></dot><dash></dash><dot></dot><dash></dash><dot></dot><dash></dash></div><div class="key-output"><cmd class="sys">Release all</cmd></div></div>
+<div class="item" data-morse="...-.-." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dash></dash><dot></dot><dash></dash><dot></dot></div><div class="key-output"><cmd class="sys">Settings</cmd></div></div>
+<div class="item" data-morse=".-.-.-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dot></dot><dash></dash><dot></dot><dash></dash></div><div class="key-output"><cmd class="sys" style="font-size:0.9em">Window to the front</cmd></div></div>
+<div class="item" data-morse="........" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><cmd class="grp">→ Keyboard</cmd></div></div>
+<div class="item" data-morse="....----" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><cmd class="grp">→ Macros</cmd></div></div>
+<div class="item" data-morse="--------" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><cmd class="grp">→ Mouse</cmd></div></div></div><div class="legend-print"><h3>Key to the colours</h3>
+  <div class="legend-print-strip"><span class="legend-item"><dot></dot> dot (sip / dot switch) &nbsp; <dash></dash> dash (puff / dash switch)</span>
+    <span class="legend-item"><keybd>Key</keybd> key or text it types</span>
+    <span class="legend-item"><cmd class="grp">→ Group</cmd> change group</span>
+    <span class="legend-item"><cmd class="mse">🖱︎ Mouse</cmd> mouse</span>
+    <span class="legend-item"><cmd class="mod">Mod</cmd> Ctrl / Shift / Alt / Win</span>
+    <span class="legend-item"><cmd class="sec">🔒 Secret</cmd> password (name only)</span>
+    <span class="legend-item"><cmd class="med">Media</cmd> media / app key</span>
+    <span class="legend-item"><cmd class="sys">System</cmd> repeat, pause...</span></div>
+  <p class="tip">Hold a press for the long-press time (1.5 s by default), then let go = next group.
+  Send <b>........</b> for Keyboard, <b>--------</b> for Mouse, <b>....----</b> for Macros,
+  <b>.-.-.-</b> to bring the SwitchMorse window to the front.</p></div></div>
+<div class="page"><h2>Keyboard</h2><div class="columns cols-3"><div class="item" data-morse=".-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash></div><div class="key-output"><keybd>A</keybd></div></div>
+<div class="item" data-morse="-..." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>B</keybd></div></div>
+<div class="item" data-morse="---." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot></div><div class="key-output"><keybd>C</keybd></div></div>
+<div class="item" data-morse="-.." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>D</keybd></div></div>
+<div class="item" data-morse="." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot></div><div class="key-output"><keybd>E</keybd></div></div>
+<div class="item" data-morse="..-." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dot></dot></div><div class="key-output"><keybd>F</keybd></div></div>
+<div class="item" data-morse="--." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot></div><div class="key-output"><keybd>G</keybd></div></div>
+<div class="item" data-morse="...." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>H</keybd></div></div>
+<div class="item" data-morse=".." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot></div><div class="key-output"><keybd>I</keybd></div></div>
+<div class="item" data-morse=".---" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>J</keybd></div></div>
+<div class="item" data-morse="-.-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dash></dash></div><div class="key-output"><keybd>K</keybd></div></div>
+<div class="item" data-morse=".-.." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>L</keybd></div></div>
+<div class="item" data-morse="----" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>M</keybd></div></div>
+<div class="item" data-morse="-." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot></div><div class="key-output"><keybd>N</keybd></div></div>
+<div class="item" data-morse="---" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>O</keybd></div></div>
+<div class="item" data-morse=".--." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dot></dot></div><div class="key-output"><keybd>P</keybd></div></div>
+<div class="item" data-morse="--.-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dash></dash></div><div class="key-output"><keybd>Q</keybd></div></div>
+<div class="item" data-morse=".-." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dot></dot></div><div class="key-output"><keybd>R</keybd></div></div>
+<div class="item" data-morse="..." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>S</keybd></div></div>
+<div class="item" data-morse="-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash></div><div class="key-output"><keybd>T</keybd></div></div>
+<div class="item" data-morse="..-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash></div><div class="key-output"><keybd>U</keybd></div></div>
+<div class="item" data-morse="...-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dash></dash></div><div class="key-output"><keybd>V</keybd></div></div>
+<div class="item" data-morse=".--" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash></div><div class="key-output"><keybd>W</keybd></div></div>
+<div class="item" data-morse="-..-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot><dash></dash></div><div class="key-output"><keybd>X</keybd></div></div>
+<div class="item" data-morse="-.--" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dash></dash><dash></dash></div><div class="key-output"><keybd>Y</keybd></div></div>
+<div class="item" data-morse="--.." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>Z</keybd></div></div>
+<div class="item" data-morse="-----" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>0</keybd></div></div>
+<div class="item" data-morse=".----" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>1</keybd></div></div>
+<div class="item" data-morse="..---" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>2</keybd></div></div>
+<div class="item" data-morse="...--" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dash></dash><dash></dash></div><div class="key-output"><keybd>3</keybd></div></div>
+<div class="item" data-morse="....-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot><dash></dash></div><div class="key-output"><keybd>4</keybd></div></div>
+<div class="item" data-morse="....." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>5</keybd></div></div>
+<div class="item" data-morse="-...." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>6</keybd></div></div>
+<div class="item" data-morse="--..." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>7</keybd></div></div>
+<div class="item" data-morse="---.." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>8</keybd></div></div>
+<div class="item" data-morse="----." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash><dot></dot></div><div class="key-output"><keybd>9</keybd></div></div>
+<div class="item" data-morse=".-...." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>!</keybd></div></div>
+<div class="item" data-morse="...--." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dash></dash><dash></dash><dot></dot></div><div class="key-output"><keybd>&quot;</keybd></div></div>
+<div class="item" data-morse="..---." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dash></dash><dash></dash><dot></dot></div><div class="key-output"><keybd>#</keybd></div></div>
+<div class="item" data-morse="..----" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>$</keybd></div></div>
+<div class="item" data-morse="...-.-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dash></dash><dot></dot><dash></dash></div><div class="key-output"><keybd>%</keybd></div></div>
+<div class="item" data-morse=".---.." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>&amp;</keybd></div></div>
+<div class="item" data-morse="..-..." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>&#x27;</keybd></div></div>
+<div class="item" data-morse="---..." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>(</keybd></div></div>
+<div class="item" data-morse="...---" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>)</keybd></div></div>
+<div class="item" data-morse="-..--" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot><dash></dash><dash></dash></div><div class="key-output"><keybd>*</keybd></div></div>
+<div class="item" data-morse="-...-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot><dot></dot><dash></dash></div><div class="key-output"><keybd>+</keybd></div></div>
+<div class="item" data-morse="-....." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>,</keybd></div></div>
+<div class="item" data-morse=".---." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dash></dash><dot></dot></div><div class="key-output"><keybd>-</keybd></div></div>
+<div class="item" data-morse=".-----" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>.</keybd></div></div>
+<div class="item" data-morse="....--" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot><dash></dash><dash></dash></div><div class="key-output"><keybd>/</keybd></div></div>
+<div class="item" data-morse=".----." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dash></dash><dash></dash><dot></dot></div><div class="key-output"><keybd>:</keybd></div></div>
+<div class="item" data-morse="-....-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot><dot></dot><dot></dot><dash></dash></div><div class="key-output"><keybd>;</keybd></div></div>
+<div class="item" data-morse="--..--" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot><dash></dash><dash></dash></div><div class="key-output"><keybd>&lt;</keybd></div></div>
+<div class="item" data-morse="---.-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot><dash></dash></div><div class="key-output"><keybd>=</keybd></div></div>
+<div class="item" data-morse="..--.." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>&gt;</keybd></div></div>
+<div class="item" data-morse="-.----" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>?</keybd></div></div>
+<div class="item" data-morse="---..-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot><dot></dot><dash></dash></div><div class="key-output"><keybd>@</keybd></div></div>
+<div class="item" data-morse=".--..." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>[</keybd></div></div>
+<div class="item" data-morse="----.." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>\</keybd></div></div>
+<div class="item" data-morse="-..---" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>]</keybd></div></div>
+<div class="item" data-morse="-...--" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot><dot></dot><dash></dash><dash></dash></div><div class="key-output"><keybd>^</keybd></div></div>
+<div class="item" data-morse="----.-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash><dot></dot><dash></dash></div><div class="key-output"><keybd>_</keybd></div></div>
+<div class="item" data-morse="--.---" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>`</keybd></div></div>
+<div class="item" data-morse="..--." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dash></dash><dot></dot></div><div class="key-output"><keybd>{</keybd></div></div>
+<div class="item" data-morse="....-." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot><dash></dash><dot></dot></div><div class="key-output"><keybd>|</keybd></div></div>
+<div class="item" data-morse="--..-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot><dash></dash></div><div class="key-output"><keybd>}</keybd></div></div>
+<div class="item" data-morse="---.--" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot><dash></dash><dash></dash></div><div class="key-output"><keybd>~</keybd></div></div>
+<div class="item" data-morse="..--.-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dash></dash><dot></dot><dash></dash></div><div class="key-output"><keybd>£</keybd></div></div>
+<div class="item" data-morse="---..-." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot><dot></dot><dash></dash><dot></dot></div><div class="key-output"><keybd>⇥</keybd></div></div>
+<div class="item" data-morse="--" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash></div><div class="key-output"><keybd>⌫</keybd></div></div>
+<div class="item" data-morse=".-.-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dot></dot><dash></dash></div><div class="key-output"><keybd>⏎</keybd></div></div>
+<div class="item" data-morse=".-.-.." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dot></dot><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>←</keybd></div></div>
+<div class="item" data-morse=".-..-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dot></dot><dot></dot><dash></dash></div><div class="key-output"><keybd>↑</keybd></div></div>
+<div class="item" data-morse=".--.." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>↓</keybd></div></div>
+<div class="item" data-morse=".-.-." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dot></dot><dash></dash><dot></dot></div><div class="key-output"><keybd>→</keybd></div></div>
+<div class="item" data-morse="-.--.." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dash></dash><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>Delete</keybd></div></div>
+<div class="item" data-morse="...-..." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dash></dash><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>End</keybd></div></div>
+<div class="item" data-morse="--...." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>Esc</keybd></div></div>
+<div class="item" data-morse="--.----" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>F1</keybd></div></div>
+<div class="item" data-morse="--..---" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>F2</keybd></div></div>
+<div class="item" data-morse="--...--" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot><dash></dash><dash></dash></div><div class="key-output"><keybd>F3</keybd></div></div>
+<div class="item" data-morse="--....-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot><dot></dot><dash></dash></div><div class="key-output"><keybd>F4</keybd></div></div>
+<div class="item" data-morse="--....." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>F5</keybd></div></div>
+<div class="item" data-morse="---...." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>F6</keybd></div></div>
+<div class="item" data-morse="----..." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>F7</keybd></div></div>
+<div class="item" data-morse="-----.." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>F8</keybd></div></div>
+<div class="item" data-morse="------." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash><dot></dot></div><div class="key-output"><keybd>F9</keybd></div></div>
+<div class="item" data-morse="-------" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>F10</keybd></div></div>
+<div class="item" data-morse=".------" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>F11</keybd></div></div>
+<div class="item" data-morse="..-----" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>F12</keybd></div></div>
+<div class="item" data-morse="......." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>Home</keybd></div></div>
+<div class="item" data-morse="-.-.." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>Insert</keybd></div></div>
+<div class="item" data-morse="...-.." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>Page Down</keybd></div></div>
+<div class="item" data-morse=".....-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot><dash></dash></div><div class="key-output"><keybd>Page Up</keybd></div></div>
+<div class="item" data-morse="..--" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dash></dash></div><div class="key-output"><keybd>Space</keybd></div></div>
+<div class="item" data-morse="--.--" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dash></dash><dash></dash></div><div class="key-output"><cmd class="mod" style="font-size:0.9em">Alt (sticky)</cmd></div></div>
+<div class="item" data-morse="-----." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash><dot></dot></div><div class="key-output"><cmd class="mod">Caps Lock</cmd></div></div>
+<div class="item" data-morse="-.-." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dash></dash><dot></dot></div><div class="key-output"><cmd class="mod" style="font-size:0.9em">Ctrl (sticky)</cmd></div></div>
+<div class="item" data-morse="---...-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot><dash></dash></div><div class="key-output"><cmd class="mod">Num Lock</cmd></div></div>
+<div class="item" data-morse="--.--." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dash></dash><dash></dash><dot></dot></div><div class="key-output"><cmd class="mod" style="font-size:0.9em">Print Screen</cmd></div></div>
+<div class="item" data-morse="--.-.." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dash></dash><dot></dot><dot></dot></div><div class="key-output"><cmd class="mod" style="font-size:0.9em">Scroll Lock</cmd></div></div>
+<div class="item" data-morse="--...-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot><dash></dash></div><div class="key-output"><cmd class="mod" style="font-size:0.9em">Shift (sticky)</cmd></div></div>
+<div class="item" data-morse="---.-." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot><dash></dash><dot></dot></div><div class="key-output"><cmd class="mod">Shift + ⇥</cmd></div></div>
+<div class="item" data-morse=".--.--" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dot></dot><dash></dash><dash></dash></div><div class="key-output"><cmd class="mod" style="font-size:0.9em">⊞ Win (sticky)</cmd></div></div>
+<div class="item" data-morse="..-.." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dot></dot><dot></dot></div><div class="key-output"><cmd class="sys">Repeat</cmd></div></div>
+<div class="item" data-morse="...-." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dash></dash><dot></dot></div><div class="key-output"><cmd class="grp">→ Mouse</cmd></div></div></div></div>
+<div class="page"><h2>Mouse &amp; Windows</h2><div class="columns cols-2 dense" style="zoom:0.885"><div class="item" data-morse="---..-." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot><dot></dot><dash></dash><dot></dot></div><div class="key-output"><keybd>⇥</keybd></div></div>
+<div class="item" data-morse=".-.-.." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dot></dot><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>←</keybd></div></div>
+<div class="item" data-morse=".-..-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dot></dot><dot></dot><dash></dash></div><div class="key-output"><keybd>↑</keybd></div></div>
+<div class="item" data-morse=".--.." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>↓</keybd></div></div>
+<div class="item" data-morse=".-.-." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dot></dot><dash></dash><dot></dot></div><div class="key-output"><keybd>→</keybd></div></div>
+<div class="item" data-morse="-.--.." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dash></dash><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>Delete</keybd></div></div>
+<div class="item" data-morse="--...." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>Esc</keybd></div></div>
+<div class="item" data-morse="--....." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>F5</keybd></div></div>
+<div class="item" data-morse="......." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>Home</keybd></div></div>
+<div class="item" data-morse=".-----" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>Keypad .</keybd></div></div>
+<div class="item" data-morse="....--" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot><dash></dash><dash></dash></div><div class="key-output"><keybd>Keypad /</keybd></div></div>
+<div class="item" data-morse=".-.-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dot></dot><dash></dash></div><div class="key-output"><keybd>Keypad Enter</keybd></div></div>
+<div class="item" data-morse="----.." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>Menu</keybd></div></div>
+<div class="item" data-morse="-.." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>Page Down</keybd></div></div>
+<div class="item" data-morse="-.-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dash></dash></div><div class="key-output"><keybd>Page Up</keybd></div></div>
+<div class="item" data-morse="-..--" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot><dash></dash><dash></dash></div><div class="key-output"><cmd class="mse" style="font-size:0.9em">🖱︎ Centre pointer</cmd></div></div>
+<div class="item" data-morse="..-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash></div><div class="key-output"><cmd class="mse" style="font-size:0.9em">🖱︎ Double left click</cmd></div></div>
+<div class="item" data-morse="..--" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dash></dash></div><div class="key-output"><cmd class="mse" style="font-size:0.8em">🖱︎ Double right click</cmd></div></div>
+<div class="item" data-morse="-." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot></div><div class="key-output"><cmd class="mse">🖱︎ Drag left</cmd></div></div>
+<div class="item" data-morse=".-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash></div><div class="key-output"><cmd class="mse">🖱︎ Left click</cmd></div></div>
+<div class="item" data-morse="---" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash></div><div class="key-output"><cmd class="mse">🖱︎ Mouse down</cmd></div></div>
+<div class="item" data-morse="..---" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dash></dash><dash></dash></div><div class="key-output"><cmd class="mse">🖱︎ Mouse down</cmd></div></div>
+<div class="item" data-morse=".----" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><cmd class="mse" style="font-size:0.9em">🖱︎ Mouse down-left</cmd></div></div>
+<div class="item" data-morse="...--" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dash></dash><dash></dash></div><div class="key-output"><cmd class="mse" style="font-size:0.9em">🖱︎ Mouse down-right</cmd></div></div>
+<div class="item" data-morse="..-." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dot></dot></div><div class="key-output"><cmd class="mse">🖱︎ Mouse fast</cmd></div></div>
+<div class="item" data-morse=".." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot></div><div class="key-output"><cmd class="mse">🖱︎ Mouse left</cmd></div></div>
+<div class="item" data-morse="....-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot><dash></dash></div><div class="key-output"><cmd class="mse">🖱︎ Mouse left</cmd></div></div>
+<div class="item" data-morse="..." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot></div><div class="key-output"><cmd class="mse">🖱︎ Mouse right</cmd></div></div>
+<div class="item" data-morse="-...." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><cmd class="mse">🖱︎ Mouse right</cmd></div></div>
+<div class="item" data-morse="--.." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot></div><div class="key-output"><cmd class="mse">🖱︎ Mouse slow</cmd></div></div>
+<div class="item" data-morse="--" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash></div><div class="key-output"><cmd class="mse">🖱︎ Mouse up</cmd></div></div>
+<div class="item" data-morse="---.." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot><dot></dot></div><div class="key-output"><cmd class="mse">🖱︎ Mouse up</cmd></div></div>
+<div class="item" data-morse="--..." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot></div><div class="key-output"><cmd class="mse" style="font-size:0.9em">🖱︎ Mouse up-left</cmd></div></div>
+<div class="item" data-morse="----." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash><dot></dot></div><div class="key-output"><cmd class="mse" style="font-size:0.9em">🖱︎ Mouse up-right</cmd></div></div>
+<div class="item" data-morse=".--" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash></div><div class="key-output"><cmd class="mse">🖱︎ Right click</cmd></div></div>
+<div class="item" data-morse="...-.." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dash></dash><dot></dot><dot></dot></div><div class="key-output"><cmd class="mse">🖱︎ Scroll down</cmd></div></div>
+<div class="item" data-morse=".....-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot><dash></dash></div><div class="key-output"><cmd class="mse">🖱︎ Scroll up</cmd></div></div>
+<div class="item" data-morse="-.-.-." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dash></dash><dot></dot><dash></dash><dot></dot></div><div class="key-output"><cmd class="med">Calculator</cmd></div></div>
+<div class="item" data-morse="-----" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><cmd class="mod">Alt + ⇥</cmd></div></div>
+<div class="item" data-morse=".---." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dash></dash><dot></dot></div><div class="key-output"><cmd class="mod">Ctrl + -</cmd></div></div>
+<div class="item" data-morse="-...-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot><dot></dot><dash></dash></div><div class="key-output"><cmd class="mod">Ctrl + =</cmd></div></div>
+<div class="item" data-morse="---...-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot><dash></dash></div><div class="key-output"><cmd class="mod">Num Lock</cmd></div></div>
+<div class="item" data-morse="--.--" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dash></dash><dash></dash></div><div class="key-output"><cmd class="mod">RAlt (sticky)</cmd></div></div>
+<div class="item" data-morse="-.-." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dash></dash><dot></dot></div><div class="key-output"><cmd class="mod">RCtrl (sticky)</cmd></div></div>
+<div class="item" data-morse="--..--" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot><dash></dash><dash></dash></div><div class="key-output"><cmd class="mod" style="font-size:0.9em">RCtrl + RAlt + ←</cmd></div></div>
+<div class="item" data-morse="--...-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot><dash></dash></div><div class="key-output"><cmd class="mod" style="font-size:0.9em">RShift (sticky)</cmd></div></div>
+<div class="item" data-morse="---.-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot><dash></dash></div><div class="key-output"><cmd class="mod">Tap Ctrl</cmd></div></div>
+<div class="item" data-morse=".--.--" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dot></dot><dash></dash><dash></dash></div><div class="key-output"><cmd class="mod" style="font-size:0.9em">⊞ RWin (sticky)</cmd></div></div>
+<div class="item" data-morse="....." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><cmd class="mod">⊞ Win + ⇥</cmd></div></div>
+<div class="item" data-morse="." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot></div><div class="key-output"><cmd class="sys">Repeat</cmd></div></div>
+<div class="item" data-morse="..-.." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dot></dot><dot></dot></div><div class="key-output"><cmd class="sys">Repeat</cmd></div></div>
+<div class="item" data-morse="...-." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dash></dash><dot></dot></div><div class="key-output"><cmd class="grp">→ Keyboard</cmd></div></div></div></div>
+<div class="page"><h2>Macros</h2><div class="columns cols-2"><div class="item" data-morse="-----" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>0</keybd></div></div>
+<div class="item" data-morse=".----" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>1</keybd></div></div>
+<div class="item" data-morse="..---" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>2</keybd></div></div>
+<div class="item" data-morse="...--" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dash></dash><dash></dash></div><div class="key-output"><keybd>3</keybd></div></div>
+<div class="item" data-morse="....-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot><dash></dash></div><div class="key-output"><keybd>4</keybd></div></div>
+<div class="item" data-morse="....." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>5</keybd></div></div>
+<div class="item" data-morse="-...." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>6</keybd></div></div>
+<div class="item" data-morse="--..." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>7</keybd></div></div>
+<div class="item" data-morse="---.." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>8</keybd></div></div>
+<div class="item" data-morse="----." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dash></dash><dot></dot></div><div class="key-output"><keybd>9</keybd></div></div>
+<div class="item" data-morse="--" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash></div><div class="key-output"><keybd>⌫</keybd></div></div>
+<div class="item" data-morse=".-.-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash><dot></dot><dash></dash></div><div class="key-output"><keybd>⏎</keybd></div></div>
+<div class="item" data-morse="...." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dot></dot></div><div class="key-output"><keybd>&quot;Hello, &quot;</keybd></div></div>
+<div class="item" data-morse="-.." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot></div><div class="key-output"><keybd>&quot;Kind regards&quot;</keybd></div></div>
+<div class="item" data-morse="-." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot></div><div class="key-output"><keybd>&quot;No&quot;</keybd></div></div>
+<div class="item" data-morse="---" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash></div><div class="key-output"><keybd>&quot;OK&quot;</keybd></div></div>
+<div class="item" data-morse="-" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash></div><div class="key-output"><keybd>&quot;Thank you&quot;</keybd></div></div>
+<div class="item" data-morse="-.--" title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dash></dash><dash></dash></div><div class="key-output"><keybd>&quot;Yes&quot;</keybd></div></div>
+<div class="item" data-morse="-..." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dot></dot><dot></dot><dot></dot></div><div class="key-output"><cmd class="sec">🔒 address</cmd></div></div>
+<div class="item" data-morse="." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot></div><div class="key-output"><cmd class="sec">🔒 email</cmd></div></div>
+<div class="item" data-morse="..-." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dash></dash><dot></dot></div><div class="key-output"><cmd class="sec">🔒 email_pw</cmd></div></div>
+<div class="item" data-morse=".-" title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dash></dash></div><div class="key-output"><cmd class="sec">🔒 name</cmd></div></div>
+<div class="item" data-morse="---." title="Click to hear its Morse tones"><div class="morse-seq"><dash></dash><dash></dash><dash></dash><dot></dot></div><div class="key-output"><cmd class="sec">🔒 phone</cmd></div></div>
+<div class="item" data-morse="...-." title="Click to hear its Morse tones"><div class="morse-seq"><dot></dot><dot></dot><dot></dot><dash></dash><dot></dot></div><div class="key-output"><cmd class="grp">→ Keyboard</cmd></div></div></div></div>
+<script>
+  /* Click a row: play its dots and dashes (dot higher, dash lower - as SwitchMorse's sound). */
+  let ctx = null;
+  function play(code) {
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    let t = ctx.currentTime + 0.05;
+    for (const c of code) {
+      const len = c === '.' ? 0.12 : 0.36;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = c === '.' ? 1200 : 800;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.25, t + 0.005);
+      g.gain.setValueAtTime(0.25, t + len - 0.005);
+      g.gain.linearRampToValueAtTime(0, t + len);
+      o.connect(g).connect(ctx.destination);
+      o.start(t); o.stop(t + len);
+      t += len + 0.1;
+    }
+  }
+  document.querySelectorAll('.item').forEach(el =>
+    el.addEventListener('click', () => play(el.dataset.morse)));
+</script>
+</body>
+</html>
