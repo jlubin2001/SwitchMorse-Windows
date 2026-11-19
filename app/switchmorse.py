@@ -24,7 +24,7 @@ from decoder import Decoder      # noqa: E402
 from switches import SwitchReader  # noqa: E402
 from window import Window        # noqa: E402
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 UI_STALE = 0.5      # seconds without a turn of the main loop = not responding
 
 try:    # real screen coordinates on scaled (125 %, 150 %) screens, for Centre pointer

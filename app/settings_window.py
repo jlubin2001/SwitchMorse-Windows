@@ -100,6 +100,24 @@ def clean_code(text):
     return t.replace("•", ".").replace("·", ".").replace("—", "-").replace("–", "-").replace("_", "-")
 
 
+def _char_choices():
+    """Every character the Character picker offers, as "c   its name": the
+    keyboard's own (ASCII) first, then common symbols, typography and accented
+    letters (typed through Unicode when the keyboard layout has no key for them)."""
+    import unicodedata
+    chars = [chr(i) for i in range(0x20, 0x7F)]
+    chars += [chr(i) for i in range(0xA1, 0x100) if i != 0xAD]          # Latin-1, no soft hyphen
+    chars += list("–—‘’“”•…€™←↑→↓✓")
+    out = []
+    for c in chars:
+        name = "space" if c == " " else unicodedata.name(c, "").lower()
+        out.append("%s     %s" % (c, name))
+    return out
+
+
+CHAR_CHOICES = _char_choices()
+
+
 def char_text(c):
     """One character as written in the map (quoted when it has to be)."""
     return mapload.phrase(c) if c in " \"'#" else c
@@ -401,6 +419,13 @@ class SettingsWindow:
         f = ttk.Frame(d)
         ttk.Label(f, text="Character").pack(side="left", padx=(0, 8))
         self._entry(f, self.v_value, width=6).pack(side="left")
+        ttk.Label(f, text="or pick one").pack(side="left", padx=(16, 8))
+        self.v_charpick = tk.StringVar()
+        c = ttk.Combobox(f, textvariable=self.v_charpick, values=CHAR_CHOICES, state="readonly",
+                         width=44, height=16, font=FONT)
+        c.pack(side="left")
+        c.bind("<<ComboboxSelected>>", lambda e: self.v_value.set(self.v_charpick.get()[0]))
+        self.v_value.trace_add("write", lambda *a: self.show_charpick())
         self.frames[KINDS[0]] = f
 
         f = ttk.Frame(d)
@@ -441,6 +466,12 @@ class SettingsWindow:
         ttk.Label(f, text="As written in morse_map.txt").pack(side="left", padx=(0, 8))
         self._entry(f, self.v_raw, width=36).pack(side="left")
         self.frames[KINDS[9]] = f
+
+    def show_charpick(self):
+        """The picker follows the Character box (typed, recorded or picked)."""
+        v = self.v_value.get()
+        hit = [s for s in CHAR_CHOICES if s[0] == v] if len(v) == 1 else []
+        self.v_charpick.set(hit[0] if hit else "")
 
     def place(self, avoid):
         r = self.root
