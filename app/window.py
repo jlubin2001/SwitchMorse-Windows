@@ -31,6 +31,7 @@ BG = "#000000"
 GROUP_COLOURS = {1: "#00FF00", 2: "#00A0FF", 3: "#FF00FF", 0: "#FFFFFF"}
 BUF_FG, HINT_FG, ACT_FG, RPT_FG, MODS_FG = "#00FFFF", "#A0A0A0", "#FFFF00", "#FF8000", "#FF8000"
 STATE_FG, WARN_FG = "#8090A0", "#FF6060"
+BIG, BIG_B, SMALL = ("Consolas",), ("Consolas", "bold"), ("Segoe UI",)    # + size (+ weight)
 
 SETTINGS = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "SwitchMorse",
                         "window.json")
@@ -95,28 +96,22 @@ class Window:
         r.geometry(safe_geometry(self.cfg.get("geometry"), r.winfo_screenwidth(),
                                  r.winfo_screenheight()))
         r.minsize(MIN_W, MIN_H)
-        # The sizes fit() picks, in pixels (negative = pixels to Tk); each line
-        # below draws in its own copy of one of these.
-        self.font = tkfont.Font(family="Consolas", size=-27, weight="bold")
-        self.hfont = tkfont.Font(family="Consolas", size=-15, weight="bold")
+        # Text sizes in pixels, picked by fit() from the window's size. Each
+        # line gets its font as a plain (family, size, weight) setting of its
+        # own: changing a SHARED (named) Tk font makes every widget refresh,
+        # the open right-click menu too, which then flickers and can't be used.
+        self.px, self.hpx = 27, 15
+        self._measure = {}                       # fonts used only to measure text
 
         self.rows = tk.Frame(r, bg=BG)
         self.rows.place(relx=0.5, rely=0.47, anchor="center")
-        # Each line has its own copy of the font, so a long line can be made
-        # smaller (see fit_lines) without shrinking the others.
-        self._fonts = []                                     # (Tk drops a font nothing holds)
-
-        def big():
-            self._fonts.append(tkfont.Font(family="Consolas", size=-27, weight="bold"))
-            return self._fonts[-1]
-        self.l_group = tk.Label(self.rows, bg=BG, font=big())
-        self.l_buf = tk.Label(self.rows, bg=BG, fg=BUF_FG, font=big())
-        self._fonts.append(tkfont.Font(family="Consolas", size=-15, weight="bold"))
-        self.l_hint = tk.Label(self.rows, bg=BG, fg=HINT_FG, font=self._fonts[-1])
+        self.l_group = tk.Label(self.rows, bg=BG, font=BIG + (-27, "bold"))
+        self.l_buf = tk.Label(self.rows, bg=BG, fg=BUF_FG, font=BIG + (-27, "bold"))
+        self.l_hint = tk.Label(self.rows, bg=BG, fg=HINT_FG, font=BIG + (-15, "bold"))
         act = tk.Frame(self.rows, bg=BG)
-        self.l_rpt = tk.Label(act, bg=BG, fg=RPT_FG, font=big())
-        self.l_act = tk.Label(act, bg=BG, fg=ACT_FG, font=big())
-        self.l_mods = tk.Label(self.rows, bg=BG, fg=MODS_FG, font=big())
+        self.l_rpt = tk.Label(act, bg=BG, fg=RPT_FG, font=BIG + (-27, "bold"))
+        self.l_act = tk.Label(act, bg=BG, fg=ACT_FG, font=BIG + (-27, "bold"))
+        self.l_mods = tk.Label(self.rows, bg=BG, fg=MODS_FG, font=BIG + (-27, "bold"))
         self.l_group.pack()
         self.l_buf.pack()
         self.l_hint.pack()
@@ -124,8 +119,7 @@ class Window:
         self.l_rpt.pack(side="left")
         self.l_act.pack(side="left")
         self.l_mods.pack()
-        self._fonts.append(tkfont.Font(family="Segoe UI", size=-12))
-        self.l_state = tk.Label(r, bg=BG, fg=STATE_FG, font=self._fonts[-1])
+        self.l_state = tk.Label(r, bg=BG, fg=STATE_FG, font=SMALL + (-12,))
         self.l_state.place(relx=0.5, rely=1.0, anchor="s")
 
         self.v_top = tk.BooleanVar(value=self.cfg.get("on_top", bool(on_top)))
@@ -253,34 +247,46 @@ class Window:
         w, h = self.root.winfo_width(), self.root.winfo_height()
         if w < 10 or h < 10:
             return
-        px = max(8, int(min((w - 12) / 20.0 / 0.56, (h - 24) / 4.6 / 1.22)))
-        if self.font.cget("size") != -px:
-            self.font.configure(size=-px)
-            self.hfont.configure(size=-max(8, int(px * 0.55)))
+        self.px = max(8, int(min((w - 12) / 20.0 / 0.56, (h - 24) / 4.6 / 1.22)))
+        self.hpx = max(8, int(self.px * 0.55))
         self.fit_lines()
+
+    def _width(self, family, text):
+        """How wide `text` is at 100 pixels high (measured once per font)."""
+        f = self._measure.get(family)
+        if f is None:
+            f = self._measure[family] = tkfont.Font(
+                root=self.root, family=family[0], size=-100,
+                weight=family[1] if len(family) > 1 else "normal")
+        return f.measure(text)
 
     def fit_lines(self):
         """A line too long for the window is drawn smaller (down to half size),
-        and wrapped if it still doesn't fit - never cut off at the sides."""
+        and wrapped if it still doesn't fit - never cut off at the sides. Only
+        the line's own font setting changes, and only when it has to."""
         avail = max(40, self.root.winfo_width() - 16)
-        px = -self.font.cget("size")
-        lines = ((self.l_group, px, ()), (self.l_buf, px, ()),
-                 (self.l_hint, -self.hfont.cget("size"), ()),
-                 (self.l_act, px, (self.l_rpt,)), (self.l_mods, px, ()),
-                 (self.l_state, 12, ()))
-        for lab, size, beside in lines:
-            f = tkfont.nametofont(lab.cget("font"))
-            f.configure(size=-size)
-            for b in beside:                     # RPT sits on the same line
-                tkfont.nametofont(b.cget("font")).configure(size=-size)
-            wide = f.measure(lab.cget("text")) + sum(
-                tkfont.nametofont(b.cget("font")).measure(b.cget("text")) for b in beside)
-            if wide > avail:
-                small = max(size // 2, int(size * avail / wide))
-                f.configure(size=-small)
-                for b in beside:
-                    tkfont.nametofont(b.cget("font")).configure(size=-small)
-            lab.configure(wraplength=avail - sum(b.winfo_reqwidth() for b in beside))
+        lines = ((self.l_group, BIG_B, self.px, ()), (self.l_buf, BIG_B, self.px, ()),
+                 (self.l_hint, BIG_B, self.hpx, ()),
+                 (self.l_act, BIG_B, self.px, (self.l_rpt,)), (self.l_mods, BIG_B, self.px, ()),
+                 (self.l_state, SMALL, 12, ()))
+        key = (avail, self.px, tuple(lab.cget("text") for lab, _, _, _ in lines),
+               self.l_rpt.cget("text"))
+        if key == getattr(self, "_fit_key", None):
+            return
+        self._fit_key = key
+        for lab, fam, size, beside in lines:
+            texts = [w.cget("text") for w in (lab,) + beside]           # RPT is on the same line
+            wide = sum(self._width(fam, t) for t in texts) * size / 100.0
+            want = size if wide <= avail else max(size // 2, int(size * avail / wide))
+            font = fam[:1] + (-want,) + fam[1:]
+            for w in (lab,) + beside:
+                if getattr(w, "_sm_font", None) != font:
+                    w.configure(font=font)
+                    w._sm_font = font
+            wrap = int(avail - sum(b.winfo_reqwidth() for b in beside))
+            if getattr(lab, "_sm_wrap", None) != wrap:
+                lab.configure(wraplength=wrap)
+                lab._sm_wrap = wrap
 
     def on_resize(self, ev):
         if ev.widget is self.root:
@@ -288,10 +294,21 @@ class Window:
 
     # ---- menu and moving -------------------------------------------------------------------
     def popup(self, ev):
+        # While the menu is open the panel is not redrawn (show() keeps the
+        # latest text for later): redrawing under an open menu made it flicker
+        # so it couldn't be used. It catches up as soon as the menu closes.
+        self._menu_open = True
         try:
             self.menu.tk_popup(ev.x_root, ev.y_root)
         finally:
             self.menu.grab_release()
+            self._menu_open = False
+            pending, self._pending = getattr(self, "_pending", None), None
+            if pending:
+                try:
+                    self.show(*pending)
+                except tk.TclError:             # (Quit was chosen: the window is gone)
+                    pass
 
     # Click and hold anywhere on the panel, then move, to move the window -
     # with or without the title bar. (Holding the button down on the TITLE
@@ -343,6 +360,10 @@ class Window:
     # ---- what to show ------------------------------------------------------------------------
     def show(self, group_no, group_name, buffer, hints, action, repeating, status, state,
              warn=False):
+        if getattr(self, "_menu_open", False):
+            self._pending = (group_no, group_name, buffer, hints, action, repeating, status,
+                             state, warn)
+            return
         self.l_group.config(text="[ %s ]" % group_name, fg=GROUP_COLOURS.get(group_no, "#FFFFFF"))
         self.l_buf.config(text=buffer or " ")
         self.l_hint.config(text=(hints if self.hints_on else "") or " ")
