@@ -95,19 +95,28 @@ class Window:
         r.geometry(safe_geometry(self.cfg.get("geometry"), r.winfo_screenwidth(),
                                  r.winfo_screenheight()))
         r.minsize(MIN_W, MIN_H)
-        self.font = tkfont.Font(family="Consolas", size=20, weight="bold")
-        self.hfont = tkfont.Font(family="Consolas", size=12, weight="bold")
-        self.small = tkfont.Font(family="Segoe UI", size=9)
+        # The sizes fit() picks, in pixels (negative = pixels to Tk); each line
+        # below draws in its own copy of one of these.
+        self.font = tkfont.Font(family="Consolas", size=-27, weight="bold")
+        self.hfont = tkfont.Font(family="Consolas", size=-15, weight="bold")
 
         self.rows = tk.Frame(r, bg=BG)
         self.rows.place(relx=0.5, rely=0.47, anchor="center")
-        self.l_group = tk.Label(self.rows, bg=BG, font=self.font)
-        self.l_buf = tk.Label(self.rows, bg=BG, fg=BUF_FG, font=self.font)
-        self.l_hint = tk.Label(self.rows, bg=BG, fg=HINT_FG, font=self.hfont)
+        # Each line has its own copy of the font, so a long line can be made
+        # smaller (see fit_lines) without shrinking the others.
+        self._fonts = []                                     # (Tk drops a font nothing holds)
+
+        def big():
+            self._fonts.append(tkfont.Font(family="Consolas", size=-27, weight="bold"))
+            return self._fonts[-1]
+        self.l_group = tk.Label(self.rows, bg=BG, font=big())
+        self.l_buf = tk.Label(self.rows, bg=BG, fg=BUF_FG, font=big())
+        self._fonts.append(tkfont.Font(family="Consolas", size=-15, weight="bold"))
+        self.l_hint = tk.Label(self.rows, bg=BG, fg=HINT_FG, font=self._fonts[-1])
         act = tk.Frame(self.rows, bg=BG)
-        self.l_rpt = tk.Label(act, bg=BG, fg=RPT_FG, font=self.font)
-        self.l_act = tk.Label(act, bg=BG, fg=ACT_FG, font=self.font)
-        self.l_mods = tk.Label(self.rows, bg=BG, fg=MODS_FG, font=self.font)
+        self.l_rpt = tk.Label(act, bg=BG, fg=RPT_FG, font=big())
+        self.l_act = tk.Label(act, bg=BG, fg=ACT_FG, font=big())
+        self.l_mods = tk.Label(self.rows, bg=BG, fg=MODS_FG, font=big())
         self.l_group.pack()
         self.l_buf.pack()
         self.l_hint.pack()
@@ -115,7 +124,8 @@ class Window:
         self.l_rpt.pack(side="left")
         self.l_act.pack(side="left")
         self.l_mods.pack()
-        self.l_state = tk.Label(r, bg=BG, fg=STATE_FG, font=self.small)
+        self._fonts.append(tkfont.Font(family="Segoe UI", size=-12))
+        self.l_state = tk.Label(r, bg=BG, fg=STATE_FG, font=self._fonts[-1])
         self.l_state.place(relx=0.5, rely=1.0, anchor="s")
 
         self.v_top = tk.BooleanVar(value=self.cfg.get("on_top", bool(on_top)))
@@ -247,6 +257,30 @@ class Window:
         if self.font.cget("size") != -px:
             self.font.configure(size=-px)
             self.hfont.configure(size=-max(8, int(px * 0.55)))
+        self.fit_lines()
+
+    def fit_lines(self):
+        """A line too long for the window is drawn smaller (down to half size),
+        and wrapped if it still doesn't fit - never cut off at the sides."""
+        avail = max(40, self.root.winfo_width() - 16)
+        px = -self.font.cget("size")
+        lines = ((self.l_group, px, ()), (self.l_buf, px, ()),
+                 (self.l_hint, -self.hfont.cget("size"), ()),
+                 (self.l_act, px, (self.l_rpt,)), (self.l_mods, px, ()),
+                 (self.l_state, 12, ()))
+        for lab, size, beside in lines:
+            f = tkfont.nametofont(lab.cget("font"))
+            f.configure(size=-size)
+            for b in beside:                     # RPT sits on the same line
+                tkfont.nametofont(b.cget("font")).configure(size=-size)
+            wide = f.measure(lab.cget("text")) + sum(
+                tkfont.nametofont(b.cget("font")).measure(b.cget("text")) for b in beside)
+            if wide > avail:
+                small = max(size // 2, int(size * avail / wide))
+                f.configure(size=-small)
+                for b in beside:
+                    tkfont.nametofont(b.cget("font")).configure(size=-small)
+            lab.configure(wraplength=avail - sum(b.winfo_reqwidth() for b in beside))
 
     def on_resize(self, ev):
         if ev.widget is self.root:
@@ -320,6 +354,7 @@ class Window:
             self.l_act.config(text=action or " ")
         self.l_mods.config(text=status or " ")
         self.l_state.config(text=state or " ", fg=WARN_FG if warn else STATE_FG)
+        self.fit_lines()
 
     def quit(self):
         self.remember()

@@ -111,11 +111,12 @@ def _char_choices():
     out = []
     for c in chars:
         name = "space" if c == " " else unicodedata.name(c, "").lower()
-        out.append("%s     %s" % (c, name))
+        out.append(" %s   %s" % (c, name))          # (the character is at [1])
     return out
 
 
 CHAR_CHOICES = _char_choices()
+CHAR_FONT = ("Consolas", 15)        # even widths: the names line up, the characters stand clear
 
 
 def char_text(c):
@@ -385,7 +386,8 @@ class SettingsWindow:
         s.configure("TLabelframe", background=BG, bordercolor="#555")
         s.configure("TLabelframe.Label", background=BG, foreground=FG, font=BOLD)
         s.configure("TNotebook", background=BG, borderwidth=0)
-        s.configure("TNotebook.Tab", background=BG2, foreground=DIM, padding=(10, 8), font=BOLD)
+        s.configure("TNotebook.Tab", background=BG2, foreground=DIM, padding=(6, 8),
+                    font=("Segoe UI", 12, "bold"))         # (11 tabs fit in 1000 pixels)
         s.map("TNotebook.Tab", background=[("selected", ACCENT)], foreground=[("selected", "white")])
         s.configure("Treeview", background=BG2, foreground=FG, fieldbackground=BG2, rowheight=36,
                     font=("Segoe UI", 14))
@@ -422,9 +424,14 @@ class SettingsWindow:
         ttk.Label(f, text="or pick one").pack(side="left", padx=(16, 8))
         self.v_charpick = tk.StringVar()
         c = ttk.Combobox(f, textvariable=self.v_charpick, values=CHAR_CHOICES, state="readonly",
-                         width=44, height=16, font=FONT)
+                         width=44, height=16, font=CHAR_FONT)
         c.pack(side="left")
-        c.bind("<<ComboboxSelected>>", lambda e: self.v_value.set(self.v_charpick.get()[0]))
+        c.bind("<<ComboboxSelected>>", lambda e: self.v_value.set(self.v_charpick.get()[1]))
+        try:                                # the drop-down list in the same even-width font
+            pop = c.tk.call("ttk::combobox::PopdownWindow", c)
+            c.tk.call("%s.f.l" % pop, "configure", "-font", CHAR_FONT)
+        except tk.TclError:
+            pass
         self.v_value.trace_add("write", lambda *a: self.show_charpick())
         self.frames[KINDS[0]] = f
 
@@ -470,18 +477,20 @@ class SettingsWindow:
     def show_charpick(self):
         """The picker follows the Character box (typed, recorded or picked)."""
         v = self.v_value.get()
-        hit = [s for s in CHAR_CHOICES if s[0] == v] if len(v) == 1 else []
+        hit = [s for s in CHAR_CHOICES if s[1] == v] if len(v) == 1 else []
         self.v_charpick.set(hit[0] if hit else "")
 
     def place(self, avoid):
         r = self.root
         r.update_idletasks()
         sw, sh = r.winfo_screenwidth(), r.winfo_screenheight()
-        w, h = min(1000, sw - 40), min(max(r.winfo_reqheight(), 860), sh - 100)
+        from secrets_window import FRAME, place_clear_of, work_area
+        left, top, right, bottom = work_area(r)
+        w = min(1000, right - left - 20)
+        h = min(max(r.winfo_reqheight(), 860), bottom - top - FRAME)   # all of it above the taskbar
         r.geometry("%dx%d" % (w, h))
         try:
-            from secrets_window import place_clear_of
-            place_clear_of(r, avoid)
+            place_clear_of(r, avoid, (w, h))
         except Exception:
             r.geometry("+%d+%d" % ((sw - w) // 2, 20))
 
@@ -689,6 +698,10 @@ class SettingsWindow:
             pw = self.extra.get("Passwords") if hasattr(self, "extra") else None
             if pw and self.nb.tab(self.nb.select(), "text").strip() == "Passwords":
                 pw.refresh()
+            tab = self.extra.get(self.nb.tab(self.nb.select(), "text").strip()) \
+                if hasattr(self, "extra") else None
+            if tab and hasattr(tab, "on_show"):
+                tab.on_show()
             self.code_row.pack_forget()
             self.editor.pack_forget()
             self.b_undo.pack_forget()

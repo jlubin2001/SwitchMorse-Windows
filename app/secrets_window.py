@@ -26,25 +26,44 @@ except Exception:
     pass
 
 
-def place_clear_of(root, avoid):
+FRAME = 40          # title bar and borders, which a window's size leaves out
+
+
+def work_area(root):
+    """(left, top, right, bottom) of the screen above the taskbar."""
+    try:
+        from ctypes import wintypes
+        r = wintypes.RECT()
+        if ctypes.windll.user32.SystemParametersInfoW(48, 0, ctypes.byref(r), 0):
+            return r.left, r.top, r.right, r.bottom
+    except Exception:
+        pass
+    return 0, 0, root.winfo_screenwidth(), root.winfo_screenheight() - 48
+
+
+def place_clear_of(root, avoid, size=None):
     """Put the window where it doesn't overlap `avoid` (x, y, w, h - the
     SwitchMorse window, which is always on top): below it, above it, to its
-    right or left, whichever fits on the screen; else the screen's centre."""
+    right or left, whichever fits above the taskbar; else the screen's centre.
+    size: (w, h) the window is being given, if not the size it asks for."""
     root.update_idletasks()
-    w, h = root.winfo_reqwidth(), root.winfo_reqheight()
-    sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
+    w, h = size or (root.winfo_reqwidth(), root.winfo_reqheight())
+    left, top, right, bottom = work_area(root)
+    bottom -= FRAME                                 # the window's own top edge is above y
     gap = 16
     if avoid:
         ax, ay, aw, ah = avoid
-        for x, y in ((ax, ay + ah + gap + 30), (ax, ay - h - gap - 40),
-                     (ax + aw + gap, ay), (ax - w - gap, ay)):
-            x = min(max(0, x), sw - w)
-            if 0 <= y and y + h <= sh - 40:
+        side_y = min(max(top, ay), bottom - h)      # beside it: as high as fits
+        for x, y in ((ax, ay + ah + gap + 30), (ax, ay - h - gap - FRAME),
+                     (ax + aw + gap, side_y), (ax - w - gap, side_y)):
+            x = min(max(left, x), right - w)
+            if top <= y and y + h <= bottom:
                 overlaps = not (x + w <= ax or ax + aw <= x or y + h <= ay or ay + ah <= y)
                 if not overlaps:
                     root.geometry("+%d+%d" % (x, y))
                     return
-    root.geometry("+%d+%d" % (max(0, (sw - w) // 2), max(0, (sh - h) // 3)))
+    root.geometry("+%d+%d" % (max(left, (left + right - w) // 2),
+                              max(top, (top + bottom - h) // 3)))
 
 
 class PasswordsWindow:

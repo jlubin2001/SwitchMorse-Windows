@@ -165,6 +165,23 @@ class FakePort:
         pass
 
 
+class NoSend:
+    """The running program below is real; its keys and clicks must not be.
+    (A half-sent code here once finished as .. and typed a real "i" into
+    whatever window had the focus.)"""
+
+    def __init__(self, real):
+        self.real = real
+
+    def __getattr__(self, name):
+        return getattr(self.real, name)
+
+    def SendInput(self, n, arr, size):
+        return n
+
+
+import sendinput  # noqa: E402
+sendinput._user32 = NoSend(sendinput._user32)
 switches.serial.Serial = FakePort
 switches.candidate_ports = lambda want="auto": [("COM99", "trinkey")]
 switches.device_name = lambda port: "Test"

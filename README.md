@@ -130,6 +130,7 @@ code (`...-.-.` in Base). Its tabs:
 |---|---|
 | Keyboard, Mouse, Macros, Base | the codes of each group (below) |
 | Start here | the first-run guide: pick your switches, test them, choose a speed, type a few letters, move the pointer to targets and left- and right-click them (with the move codes laid out like a number keypad), the codes to remember. It opens by itself the first time SwitchMorse starts. A switch press moves it on, so no mouse is needed |
+| Practice | copy a line of short-code letters, all letters, letters and numbers, common words or sentences. Each letter turns green or red as you type it, and the next letter's code is shown. It tracks your speed (words a minute), accuracy and most-missed letters, and "My trouble letters" practises those. A finished line is followed by a new one by itself. Only counts are kept (`%APPDATA%\SwitchMorse\practice.json`), never what you typed |
 | Speed | Learning / Comfortable / Fast, each timing with − / + buttons, a practice box, how typing behaves |
 | Switches | which switches; DOT and DASH light up as you press them; the two keyboard keys; the port |
 | Window | always on top, title bar, hints, see-through, sound; put the window back where it can be seen |

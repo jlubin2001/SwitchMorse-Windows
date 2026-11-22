@@ -1075,4 +1075,314 @@ class GuideTab:
             anchor="w", pady=(10, 0))
 
 
-TAB_CLASSES = [GuideTab, SpeedTab, SwitchesTab, WindowTab, PasswordsTab, CheatTab]
+# ---- Practice ---------------------------------------------------------------------------------------
+PRACTICE_FILE = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "SwitchMorse",
+                             "practice.json")
+WORDS = ("the and you that was for are with his they this have from one had word but not what "
+         "all were when your can said there use each which she how their will other about out "
+         "many then them these some her would make like him into time has look two more write "
+         "see number way could people than first water been call who its now find long down day "
+         "did get come made may part over new sound take only little work know place year live "
+         "back give most very after thing our just name good sentence man think say great where "
+         "help through much before line right too mean old any same tell boy follow came want "
+         "show also around form three small set put end does another well large must big even "
+         "such because turn here why ask went men read need land different home us move try "
+         "kind hand picture again change off play spell air away animal house point page letter "
+         "mother answer found study still learn should world high").split()
+SENTENCES = ["the quick brown fox jumps over the lazy dog",
+             "pack my box with five dozen liquor jugs",
+             "how vexingly quick daft zebras jump",
+             "sphinx of black quartz judge my vow",
+             "the five boxing wizards jump quickly",
+             "please call me when you get home",
+             "can you turn the lights off please",
+             "i would like a cup of tea",
+             "see you tomorrow morning",
+             "thank you for your help today"]
+PRACTICE_SETS = [("short", "Short codes"), ("letters", "Letters"),
+                 ("numbers", "+ numbers"), ("words", "Words"),
+                 ("sentences", "Sentences"), ("trouble", "My trouble letters")]
+LINE_GROUPS = 4                 # groups of 5 random letters on a line
+NEXT_LINE_MS = 2500             # a finished line: this long, then a new one
+
+
+class PracticeTab:
+    """Copy a line: random letters, words or sentences. Each letter turns
+    green or red as it is typed (by Morse, into the box), the next letter's
+    code is shown, and the speed, accuracy and most-missed letters are kept.
+    Everything works with the switches alone: a finished line is followed by
+    a new one by itself."""
+    title = "Practice"
+
+    def __init__(self, f, host):
+        self.host, self.app = host, host.app
+        self.stats = self._load()
+        self.line, self.started, self.typed_n, self.right_n = "", None, 0, 0
+        self.prev = ""
+        self.line_job = None
+
+        top = ttk.Frame(f)
+        top.pack(fill="x", padx=12, pady=(12, 4))
+        _label(top, "Practise", style="Bold.TLabel").pack(side="left", padx=(0, 10))
+        self.v_set = tk.StringVar(value=self.stats.get("set", "short"))
+        for key, text in PRACTICE_SETS:
+            ttk.Radiobutton(top, text=text, value=key, variable=self.v_set,
+                            command=self.new_line).pack(side="left", padx=4)
+        opt = ttk.Frame(f)
+        opt.pack(fill="x", padx=12)
+        self.v_hint = tk.BooleanVar(value=self.stats.get("hint", True))
+        ttk.Checkbutton(opt, text="Show the code for the next letter", variable=self.v_hint,
+                        command=self.show).pack(side="left")
+        self.l_group = ttk.Frame(opt)                   # "send ... to go to Keyboard"
+        self.l_group.pack(side="left", padx=16)
+
+        self.target = tk.Text(f, height=2, font=("Consolas", 26), bg=BG, fg=DIM, relief="flat",
+                              wrap="word", highlightthickness=0, cursor="arrow", takefocus=0)
+        self.target.pack(fill="x", padx=12, pady=(14, 2))
+        self.target.tag_configure("right", foreground=OK)
+        self.target.tag_configure("wrong", foreground="black", background=BAD)
+        self.target.tag_configure("next", foreground=FG, underline=True)
+        self.v_typed = tk.StringVar()
+        self.box = tk.Entry(f, textvariable=self.v_typed, font=("Consolas", 26), bg=BG2, fg=FG,
+                            insertbackground=FG, relief="flat", highlightthickness=3,
+                            highlightbackground="#555", highlightcolor=ACCENT)
+        self.box.pack(fill="x", padx=12, pady=4)
+        self.v_typed.trace_add("write", lambda *a: self.typed())
+        self.box.bind("<Return>", lambda e: self.new_line())      # Enter: skip to a new line
+        self.f_next = ttk.Frame(f)                      # "Next: s  ..."
+        self.f_next.pack(anchor="w", padx=12, pady=(6, 0))
+
+        st = ttk.LabelFrame(f, text=" How it's going ")
+        st.pack(fill="x", padx=12, pady=10)
+        self.l_now = _label(st, "", style="Value.TLabel")
+        self.l_now.pack(anchor="w", padx=8, pady=(6, 2))
+        self.l_best = _label(st, "", style="Dim.TLabel")
+        self.l_best.pack(anchor="w", padx=8)
+        self.f_missed = ttk.Frame(st)
+        self.f_missed.pack(anchor="w", padx=8, pady=(2, 8))
+
+        bar = ttk.Frame(f)
+        bar.pack(fill="x", padx=12, pady=(0, 6))
+        ttk.Button(bar, text="New line", command=self.new_line).pack(side="left")
+        self.f_enter = ttk.Frame(bar)                   # "or send <Enter's code> for a new line"
+        self.f_enter.pack(side="left", padx=12)
+        ttk.Button(bar, text="Forget my trouble letters", command=self.forget).pack(side="right")
+        f.after_idle(self.new_line)
+
+    # -- the codes, from the user's own Keyboard group
+    def codes(self):
+        out = {}
+        for e in mapload.entries(self.host.map_path):
+            a = e["action"]
+            if e["group"] != 1 or isinstance(a, str):
+                continue
+            if a.kind == "char" and a.text not in out:
+                out[a.text] = e["code"]
+            elif a.kind == "key" and a.label.lower() == "space" and " " not in out:
+                out[" "] = e["code"]
+        return out
+
+    def make_line(self, which, codes):
+        import random
+        letters = [c for c in codes if "a" <= c <= "z"]
+        if which == "short":
+            pool = [c for c in letters if len(codes[c]) <= 3]
+        elif which == "numbers":
+            pool = letters + [c for c in codes if c.isdigit()]
+        elif which == "trouble":                        # mostly those, with others mixed in
+            worst = [c for c, n in sorted(self.stats.get("missed", {}).items(),
+                                          key=lambda kv: -kv[1])[:8] if c in codes and c != " "]
+            pool = worst * 4 + letters if worst else []
+        else:
+            pool = letters
+        if which == "words":
+            return " ".join(random.sample(WORDS, 6))
+        if which == "sentences":
+            return random.choice(SENTENCES)
+        if not pool:
+            return ""
+        return " ".join("".join(random.choice(pool) for _ in range(5)) for _ in range(LINE_GROUPS))
+
+    def new_line(self):
+        if self.line_job:
+            self.box.after_cancel(self.line_job)
+            self.line_job = None
+        which = self.v_set.get()
+        self.stats["set"] = which
+        self.line = self.make_line(which, self.codes())
+        if not self.line:
+            self.line = ""
+            self.host.status("No trouble letters yet - they're collected as you practise.", DIM)
+        self.started, self.typed_n, self.right_n, self.prev = None, 0, 0, ""
+        self.v_typed.set("")
+        self.show()
+        self.show_enter()
+        self.focus()
+
+    def show_enter(self):
+        """Under the line: the user's own code for Enter, which skips to a new line."""
+        code = None
+        for g in (1, 0):
+            for e in mapload.entries(self.host.map_path):
+                a = e["action"]
+                if (e["group"] == g and not isinstance(a, str) and a.kind == "key"
+                        and a.label.lower() == "enter"):
+                    code = e["code"]
+                    break
+            if code:
+                break
+        self.host.rich(self.f_enter, "or send %s (Enter) for a new line" % (
+            "\x00%s\x00" % code if code else "Enter"), DIM, FONT)
+
+    def focus(self):
+        try:
+            if self.host.nb.tab(self.host.nb.select(), "text").strip() == self.title:
+                self.box.focus_set()
+        except tk.TclError:
+            pass
+
+    def on_show(self):
+        self.focus()
+        self.tick_group()
+
+    # -- typing
+    def typed(self):
+        import time
+        s = self.v_typed.get().lower()
+        if len(s) > len(self.prev):                     # new letters (not a backspace)
+            if self.started is None:
+                self.started = time.monotonic()
+            for i in range(len(self.prev), len(s)):
+                want = self.line[i] if i < len(self.line) else None
+                self.typed_n += 1
+                if s[i] == want:
+                    self.right_n += 1
+                elif want is not None:
+                    missed = self.stats.setdefault("missed", {})
+                    missed[want] = missed.get(want, 0) + 1
+        self.prev = s
+        self.show()
+        if self.line and s == self.line:
+            self.finished()
+
+    def finished(self):
+        import time
+        mins = max(time.monotonic() - (self.started or time.monotonic()), 1) / 60.0
+        wpm = len(self.line) / 5.0 / mins
+        acc = 100.0 * self.right_n / max(self.typed_n, 1)
+        if wpm > self.stats.get("best_wpm", 0):
+            self.stats["best_wpm"] = round(wpm, 1)
+            note = " - your best yet!"
+        else:
+            note = "."
+        self.stats["lines"] = self.stats.get("lines", 0) + 1
+        self._save()
+        self.show()
+        self.host.status("Line done: %.1f words a minute, %d%% right%s A new line comes next."
+                         % (wpm, acc, note), OK)
+        self.line_job = self.box.after(NEXT_LINE_MS, self.new_line)
+
+    # -- what's shown
+    def show(self):
+        t = self.target
+        t.configure(state="normal")
+        t.delete("1.0", "end")
+        t.insert("1.0", self.line)
+        s = self.v_typed.get().lower()
+        for i, ch in enumerate(s[:len(self.line)]):
+            t.tag_add("right" if ch == self.line[i] else "wrong", "1.0+%dc" % i, "1.0+%dc" % (i + 1))
+        n = len(s)
+        if n < len(self.line):
+            t.tag_add("next", "1.0+%dc" % n, "1.0+%dc" % (n + 1))
+        t.configure(state="disabled")
+
+        for w in self.f_next.winfo_children():
+            w.destroy()
+        if n < len(self.line) and self.v_hint.get():
+            ch = self.line[n]
+            code = self.codes().get(ch)
+            _label(self.f_next, "Next:", style="Dim.TLabel").pack(side="left")
+            _label(self.f_next, "space" if ch == " " else ch, style="Bold.TLabel").pack(
+                side="left", padx=(8, 10))
+            if code:
+                ttk.Label(self.f_next, image=self.host.code_image(code)).pack(side="left")
+        elif n > len(self.line):
+            _label(self.f_next, "That's more than the line - Backspace takes letters off.",
+                   style="Dim.TLabel").pack(side="left")
+        self.stats["hint"] = bool(self.v_hint.get())
+
+        import time
+        if self.started and self.typed_n:
+            mins = max(time.monotonic() - self.started, 1) / 60.0
+            self.l_now.configure(text="%.1f words a minute    %d of %d right (%d%%)" % (
+                self.right_n / 5.0 / mins, self.right_n, self.typed_n,
+                100 * self.right_n // self.typed_n))
+        else:
+            self.l_now.configure(text="Copy the line above.")
+        self.l_best.configure(text="Your best: %.1f words a minute    Lines done: %d" % (
+            self.stats.get("best_wpm", 0), self.stats.get("lines", 0)))
+        self.show_missed()
+
+    def show_missed(self):
+        for w in self.f_missed.winfo_children():
+            w.destroy()
+        missed = sorted(((c, n) for c, n in self.stats.get("missed", {}).items() if c != " "),
+                        key=lambda kv: -kv[1])[:6]
+        if not missed:
+            return
+        _label(self.f_missed, "Most missed:", style="Dim.TLabel").pack(side="left", padx=(0, 8))
+        codes = self.codes()
+        for c, n in missed:
+            _label(self.f_missed, "%s ×%d" % (c, n), style="Bold.TLabel").pack(side="left")
+            if c in codes:
+                ttk.Label(self.f_missed, image=self.host.code_image(codes[c], small=True)).pack(
+                    side="left", padx=(4, 16))
+
+    def tick_group(self):
+        """Typing needs the Keyboard group: say how to get there when not in it."""
+        try:
+            if not self.l_group.winfo_exists():
+                return
+            if self.host.nb.tab(self.host.nb.select(), "text").strip() != self.title:
+                return
+        except tk.TclError:
+            return
+        for w in self.l_group.winfo_children():
+            w.destroy()
+        a = self.app
+        if a and a.actions.group != 1:
+            code = None
+            for e in mapload.entries(self.host.map_path):
+                if e["group"] == 0 and mapload._norm(e["text"]) == "groupkeyboard":
+                    code = e["code"]
+                    break
+            self.host.rich(self.l_group, "Send %s to go to the Keyboard group first." % (
+                "\x00%s\x00" % code if code else "the Keyboard code"), WARN, BOLD)
+        self.l_group.after(500, self.tick_group)
+
+    def forget(self):
+        self.stats["missed"] = {}
+        self._save()
+        self.show()
+        self.host.status("Trouble letters forgotten.", DIM)
+
+    # -- kept between runs (only counts: no typed text is stored)
+    def _load(self):
+        try:
+            import json
+            with open(PRACTICE_FILE, encoding="utf-8") as fh:
+                return json.load(fh)
+        except (OSError, ValueError):
+            return {}
+
+    def _save(self):
+        try:
+            import json
+            os.makedirs(os.path.dirname(PRACTICE_FILE), exist_ok=True)
+            with open(PRACTICE_FILE, "w", encoding="utf-8") as fh:
+                json.dump(self.stats, fh, indent=1, sort_keys=True)
+        except OSError:
+            pass
+
+
+TAB_CLASSES = [GuideTab, PracticeTab, SpeedTab, SwitchesTab, WindowTab, PasswordsTab, CheatTab]
