@@ -340,8 +340,15 @@ class WindowTab:
         for pct in (100, 85, 70, 50, 35):
             ttk.Radiobutton(row, text="%d %%" % pct, value=pct, variable=w.v_alpha,
                             command=lambda: (w.apply_look(), self.done())).pack(side="left", padx=4)
-        ttk.Button(look, text="Put the window back in the top-left corner, normal size",
-                   command=self.reset_place).pack(anchor="w", padx=8, pady=8)
+        where = ttk.Frame(look)
+        where.pack(anchor="w", padx=8, pady=8)
+        _label(where, "Move it, normal size:", style="Bold.TLabel").grid(
+            row=0, column=0, rowspan=2, padx=(0, 12), sticky="w")
+        for i, (corner, text) in enumerate((("top-left", "Top left"), ("top-right", "Top right"),
+                                            ("bottom-left", "Bottom left"),
+                                            ("bottom-right", "Bottom right"))):
+            ttk.Button(where, text=text, width=13, command=lambda c=corner: self.corner(c)).grid(
+                row=i // 2, column=1 + i % 2, padx=4, pady=3)
 
         snd = ttk.LabelFrame(f, text=" Sound ")
         snd.pack(fill="x", padx=8, pady=8)
@@ -367,11 +374,10 @@ class WindowTab:
             self.v_startup.set(startup.is_on())
             self.host.status("Could not change it: %s" % ex, BAD)
 
-    def reset_place(self):
-        import window
-        self.win.root.geometry(window.DEFAULT_GEOMETRY)
-        self.win.remember()
-        self.done()
+    def corner(self, corner):
+        self.win.to_corner(corner)
+        self.host.status("Moved to the %s corner - remembered for next time."
+                         % corner.replace("-", " "), OK)
 
 
 # ---- Passwords -----------------------------------------------------------------------------------

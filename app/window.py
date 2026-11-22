@@ -293,6 +293,30 @@ class Window:
             self.fit()
 
     # ---- menu and moving -------------------------------------------------------------------
+    def to_corner(self, corner):
+        """Normal size, in a corner of the screen above the taskbar: corner is
+        "top-left", "top-right", "bottom-left" or "bottom-right"."""
+        import ctypes
+        from ctypes import wintypes
+        r = self.root
+        w, h = (int(v) for v in re.match(r"(\d+)x(\d+)", DEFAULT_GEOMETRY).groups())
+        r.geometry("%dx%d" % (w, h))
+        r.update_idletasks()
+        u = ctypes.windll.user32
+        outer, work = wintypes.RECT(), wintypes.RECT()
+        u.GetWindowRect(u.GetAncestor(r.winfo_id(), 2) or r.winfo_id(), ctypes.byref(outer))
+        if not u.SystemParametersInfoW(48, 0, ctypes.byref(work), 0):
+            work.left, work.top = 0, 0
+            work.right, work.bottom = r.winfo_screenwidth(), r.winfo_screenheight() - 48
+        ow = max(w, outer.right - outer.left)              # with the title bar and edges
+        oh = max(h, outer.bottom - outer.top)
+        gap = 8
+        x = work.left + gap if corner.endswith("left") else work.right - ow - gap
+        y = work.top + gap if corner.startswith("top") else work.bottom - oh - gap
+        r.geometry("+%d+%d" % (x, y))
+        r.update_idletasks()
+        self.remember()
+
     def popup(self, ev):
         # While the menu is open the panel is not redrawn (show() keeps the
         # latest text for later): redrawing under an open menu made it flicker
